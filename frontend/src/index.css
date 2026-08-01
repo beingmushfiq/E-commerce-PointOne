@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-page: #fafafa;
+    --bg-surface: #ffffff;
+    --bg-surface-elevated: #f4f4f5;
+    --border-subtle: #e4e4e7;
+    --border-accent: #d4d4d8;
+    --text-primary: #18181b;
+    --text-secondary: #71717a;
+    --text-tertiary: #a1a1aa;
+    --accent-gold: #b45309;
+    --accent-gold-glow: rgba(180, 83, 9, 0.1);
+  }
+
+  body {
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+    letter-spacing: -0.01em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  /* Custom refined light scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #fafafa;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #d4d4d8;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #a1a1aa;
+  }
+}
+
+/* Glass & Vignette Effects */
+.editorial-glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-subtle);
+}
+
+.editorial-vignette {
+  box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.03);
+}
+
+/* Custom Light Grid Texture Overlay */
+.bg-grid-pattern {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+}
+
+/* Typography styles */
+.font-editorial {
+  font-family: "Playfair Display", Georgia, Cambria, "Times New Roman", Times, serif;
+}
+
+.font-mono-numbers {
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
