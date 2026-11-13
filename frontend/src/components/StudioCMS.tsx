@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Package, FolderTree, Activity, Plus, Search, Settings,
   ExternalLink, Database, Sliders as SlidersIcon, HelpCircle, Lock, LogOut,
   ShoppingBag, CheckCircle, Trash2, Edit3, Sun, Moon,
-  RefreshCw, AlertCircle, X
+  RefreshCw, AlertCircle, X, Store
 } from 'lucide-react';
 import { EditorialButton } from './DesignSystem';
 import type { ProductItem } from '../types/ui';
@@ -27,11 +28,22 @@ export const StudioCMS: React.FC<StudioCMSProps> = ({
   const { user, isAdmin, login, logout } = useAuth();
   const { formatPrice } = useCurrency();
   const { theme, toggleTheme } = useTheme();
+  const queryClient = useQueryClient();
 
   // Tab State
   const [activeTab, setActiveTab] = useState<'inventory' | 'categories' | 'orders' | 'cms' | 'analytics' | 'settings'>('inventory');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+
+  // Store Configuration State (Settings Tab)
+  const [storeSettings, setStoreSettings] = useState({
+    storeName: 'CENTERPOINT Flagship Store',
+    supportEmail: 'concierge@centerpoint.com',
+    supportPhone: '+880 1712-345678',
+    lowStockThreshold: 10,
+    maintenanceMode: false,
+    vatPercentage: 5,
+  });
 
   // Live Local Data
   const [products, setProducts] = useState<ProductItem[]>(initialProducts);
@@ -182,6 +194,7 @@ export const StudioCMS: React.FC<StudioCMSProps> = ({
       if (created) {
         setProducts([created, ...products]);
       }
+      queryClient.invalidateQueries({ queryKey: ['products'] });
       setIsAddProductOpen(false);
       setNewProductForm({
         name: '',
@@ -231,6 +244,7 @@ export const StudioCMS: React.FC<StudioCMSProps> = ({
         setProducts(products.map((p) => (p.id === updated.id ? updated : p)));
         setSelectedProduct(updated);
       }
+      queryClient.invalidateQueries({ queryKey: ['products'] });
       setIsEditingProduct(false);
       showFeedback('Product details saved');
     } catch (err: any) {
@@ -244,6 +258,7 @@ export const StudioCMS: React.FC<StudioCMSProps> = ({
       await api.delete(`/admin/products/${id}`);
       setProducts(products.filter((p) => p.id !== id));
       setSelectedProduct(null);
+      queryClient.invalidateQueries({ queryKey: ['products'] });
       showFeedback('Product removed from catalog');
     } catch {
       alert('Failed to remove product');
@@ -264,6 +279,7 @@ export const StudioCMS: React.FC<StudioCMSProps> = ({
       if (created) {
         setCategories([...categories, created]);
       }
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
       setIsAddCategoryOpen(false);
       setNewCategoryName('');
       setNewCategoryDesc('');
@@ -278,6 +294,7 @@ export const StudioCMS: React.FC<StudioCMSProps> = ({
     try {
       await api.delete(`/admin/categories/${id}`);
       setCategories(categories.filter((c) => c.id !== id));
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
       showFeedback('Category removed');
     } catch {
       alert('Failed to delete category');
@@ -313,6 +330,7 @@ export const StudioCMS: React.FC<StudioCMSProps> = ({
       if (res.data?.data) {
         setSliders([...sliders, res.data.data]);
       }
+      queryClient.invalidateQueries({ queryKey: ['sliders'] });
       setIsAddSliderOpen(false);
       setNewSliderForm({
         title: '',
@@ -332,6 +350,7 @@ export const StudioCMS: React.FC<StudioCMSProps> = ({
     try {
       await api.delete(`/admin/sliders/${id}`);
       setSliders(sliders.filter((s) => s.id !== id));
+      queryClient.invalidateQueries({ queryKey: ['sliders'] });
       showFeedback('Slide removed');
     } catch {
       alert('Failed to delete slide');
@@ -436,7 +455,9 @@ export const StudioCMS: React.FC<StudioCMSProps> = ({
     const matchesCat =
       selectedCategory === 'all' ||
       p.category_id?.toString() === selectedCategory ||
-      p.category?.name === selectedCategory;
+      (p as any).category?.id?.toString() === selectedCategory ||
+      (p as any).category?.name === selectedCategory ||
+      (p as any).category?.slug === selectedCategory;
     return matchesSearch && matchesCat;
   });
 
@@ -1043,34 +1064,109 @@ export const StudioCMS: React.FC<StudioCMSProps> = ({
 
           {/* TAB 6: SETTINGS */}
           {activeTab === 'settings' && (
-            <div className="space-y-6 max-w-xl">
+            <div className="space-y-6 max-w-3xl">
               <div>
-                <h1 className="text-xl font-bold text-zinc-900 dark:text-white font-serif">Studio CMS Configuration</h1>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Tenant environment credentials and administrative identity.</p>
+                <h1 className="text-xl font-bold text-zinc-900 dark:text-white font-serif">Store Configuration & Environment</h1>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Tenant identity, operations parameters, inventory alert thresholds, and staff access credentials.</p>
               </div>
 
+              {/* Store Identity Settings */}
               <div className="p-6 bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm space-y-4">
+                <div className="flex items-center gap-2 pb-3 border-b border-zinc-100 dark:border-zinc-800">
+                  <Store className="w-4 h-4 text-amber-500" />
+                  <h3 className="font-bold text-sm text-zinc-900 dark:text-white font-serif">Storefront Operational Profile</h3>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                  <div>
+                    <label className="block text-zinc-600 dark:text-zinc-400 font-semibold mb-1">Store Name</label>
+                    <input
+                      type="text"
+                      value={storeSettings.storeName}
+                      onChange={(e) => setStoreSettings({ ...storeSettings, storeName: e.target.value })}
+                      className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 text-zinc-900 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-zinc-600 dark:text-zinc-400 font-semibold mb-1">Support Email</label>
+                    <input
+                      type="email"
+                      value={storeSettings.supportEmail}
+                      onChange={(e) => setStoreSettings({ ...storeSettings, supportEmail: e.target.value })}
+                      className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 text-zinc-900 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-zinc-600 dark:text-zinc-400 font-semibold mb-1">Customer Support Phone</label>
+                    <input
+                      type="text"
+                      value={storeSettings.supportPhone}
+                      onChange={(e) => setStoreSettings({ ...storeSettings, supportPhone: e.target.value })}
+                      className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 text-zinc-900 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-zinc-600 dark:text-zinc-400 font-semibold mb-1">Low Stock Warning Threshold (Units)</label>
+                    <input
+                      type="number"
+                      value={storeSettings.lowStockThreshold}
+                      onChange={(e) => setStoreSettings({ ...storeSettings, lowStockThreshold: parseInt(e.target.value) || 10 })}
+                      className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 text-zinc-900 dark:text-white font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-2 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="maint"
+                      checked={storeSettings.maintenanceMode}
+                      onChange={(e) => setStoreSettings({ ...storeSettings, maintenanceMode: e.target.checked })}
+                      className="w-4 h-4 accent-amber-500 cursor-pointer"
+                    />
+                    <label htmlFor="maint" className="text-xs text-zinc-700 dark:text-zinc-300 font-medium cursor-pointer">
+                      Maintenance Mode (Storefront displays private curation screen)
+                    </label>
+                  </div>
+                  <button
+                    onClick={() => showFeedback('Store configuration saved')}
+                    className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold uppercase text-xs transition cursor-pointer shadow-sm"
+                  >
+                    Save Profile
+                  </button>
+                </div>
+              </div>
+
+              {/* Administrative Identity */}
+              <div className="p-6 bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm space-y-4">
+                <div className="flex items-center gap-2 pb-3 border-b border-zinc-100 dark:border-zinc-800">
+                  <Lock className="w-4 h-4 text-zinc-400" />
+                  <h3 className="font-bold text-sm text-zinc-900 dark:text-white font-serif">Session & Authentication Info</h3>
+                </div>
+
                 <div className="space-y-3 text-xs">
                   <div className="flex justify-between py-2 border-b border-zinc-100 dark:border-zinc-800">
-                    <span className="font-semibold text-zinc-700 dark:text-zinc-300">Environment</span>
-                    <span className="font-mono text-zinc-900 dark:text-white">Dual-Edition Production</span>
+                    <span className="font-semibold text-zinc-700 dark:text-zinc-300">Deployment Architecture</span>
+                    <span className="font-mono text-zinc-900 dark:text-white">Dual-Edition Commercial (Tenant / Standalone)</span>
                   </div>
                   <div className="flex justify-between py-2 border-b border-zinc-100 dark:border-zinc-800">
-                    <span className="font-semibold text-zinc-700 dark:text-zinc-300">Admin Account</span>
+                    <span className="font-semibold text-zinc-700 dark:text-zinc-300">Active Admin Staff</span>
                     <span className="font-mono text-amber-500">{user.email}</span>
                   </div>
                   <div className="flex justify-between py-2 border-b border-zinc-100 dark:border-zinc-800">
-                    <span className="font-semibold text-zinc-700 dark:text-zinc-300">Guard Profile</span>
-                    <span className="font-mono text-zinc-900 dark:text-white">Staff / Admin</span>
+                    <span className="font-semibold text-zinc-700 dark:text-zinc-300">Security Guard</span>
+                    <span className="font-mono text-emerald-500">Sanctum Token (Staff Guard)</span>
                   </div>
                 </div>
 
                 <div className="pt-2">
                   <button
                     onClick={() => logout()}
-                    className="w-full py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 text-xs font-semibold transition cursor-pointer"
+                    className="w-full py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-2"
                   >
-                    Log Out of Admin Studio
+                    <LogOut className="w-4 h-4" />
+                    <span>Log Out of Admin Studio</span>
                   </button>
                 </div>
               </div>

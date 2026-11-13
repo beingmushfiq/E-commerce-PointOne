@@ -130,3 +130,4 @@ class SampleOrderSeeder extends Seeder
         }
     }
 }
+

@@ -148,3 +148,4 @@ class AdminCmsContentController extends Controller
         ]);
     }
 }
+

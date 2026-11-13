@@ -71,18 +71,47 @@ function StorefrontContent() {
     api.get('/storefront/config').then(res => {
       const data = res.data?.data;
       setStoreConfig(data);
-      if (data?.theme?.accent_color && typeof document !== 'undefined') {
-        document.documentElement.style.setProperty('--accent-gold', data.theme.accent_color);
-      }
-      if (data?.theme?.glass_blur && typeof document !== 'undefined') {
-        document.documentElement.style.setProperty('--glass-blur', data.theme.glass_blur);
+      if (typeof document !== 'undefined' && data?.theme) {
+        if (data.theme.accent_color) {
+          document.documentElement.style.setProperty('--accent-gold', data.theme.accent_color);
+        }
+        if (data.theme.glass_blur) {
+          document.documentElement.style.setProperty('--glass-blur', data.theme.glass_blur);
+        }
+        if (data.theme.border_radius) {
+          document.documentElement.style.setProperty('--radius-card', data.theme.border_radius);
+        }
+        if (data.theme.font_heading) {
+          document.documentElement.style.setProperty('--font-heading', `'${data.theme.font_heading}', serif`);
+        }
+        if (data.custom?.custom_css) {
+          let styleTag = document.getElementById('mcp-custom-css');
+          if (!styleTag) {
+            styleTag = document.createElement('style');
+            styleTag.id = 'mcp-custom-css';
+            document.head.appendChild(styleTag);
+          }
+          styleTag.innerHTML = data.custom.custom_css;
+        }
       }
     }).catch(() => {});
 
-    // Listen for hash navigation e.g. #mcp-login
+    // Listen for hash navigation: #mcp-login, #mcp, #cms, #storefront
     const handleHash = () => {
-      if (window.location.hash === '#mcp-login') {
+      const h = window.location.hash;
+      if (h === '#mcp') {
+        const token = localStorage.getItem('mcp_token');
+        if (token) {
+          setViewMode('mcp');
+        } else {
+          setViewMode('mcp_login');
+        }
+      } else if (h === '#mcp-login') {
         setViewMode('mcp_login');
+      } else if (h === '#cms') {
+        setViewMode('cms');
+      } else if (h === '' || h === '#' || h === '#storefront') {
+        setViewMode('storefront');
       }
     };
     handleHash();
@@ -123,7 +152,10 @@ function StorefrontContent() {
   if (viewMode === 'mcp_login') {
     return (
       <McpLogin
-        onLoginSuccess={() => setViewMode('mcp')}
+        onLoginSuccess={() => {
+          window.location.hash = '#mcp';
+          setViewMode('mcp');
+        }}
         onBackToStore={() => {
           window.location.hash = '';
           setViewMode('storefront');
@@ -155,7 +187,10 @@ function StorefrontContent() {
       <StudioCMS
         products={productsList}
         categories={categories || []}
-        onOpenStorefront={() => setViewMode('storefront')}
+        onOpenStorefront={() => {
+          window.location.hash = '';
+          setViewMode('storefront');
+        }}
       />
     );
   }
@@ -232,8 +267,11 @@ function StorefrontContent() {
 
           {/* Discreet Owner Ingress */}
           <button
-            onClick={() => setViewMode('mcp_login')}
-            className="text-zinc-500 hover:text-amber-400 transition flex items-center gap-1 text-[10px] font-mono"
+            onClick={() => {
+              window.location.hash = '#mcp-login';
+              setViewMode('mcp_login');
+            }}
+            className="text-zinc-500 hover:text-amber-400 transition flex items-center gap-1 text-[10px] font-mono cursor-pointer"
             title="Owner Master Control Panel (/mcp-login)"
           >
             <Lock className="w-3 h-3" />
@@ -295,7 +333,7 @@ function StorefrontContent() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsCommandOpen(true)}
-              className="p-2.5 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
+              className="p-2.5 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition cursor-pointer"
               title="Search Catalog (⌘K)"
             >
               <Search className="w-5 h-5" />
@@ -303,15 +341,18 @@ function StorefrontContent() {
 
             <button
               onClick={() => setIsCartOpen(true)}
-              className="relative px-4 py-2.5 bg-zinc-900 hover:bg-black dark:bg-amber-500 dark:hover:bg-amber-400 text-white dark:text-zinc-950 rounded-xl transition flex items-center gap-2.5 shadow-md active:scale-95"
+              className="relative px-4 py-2.5 bg-zinc-900 hover:bg-black dark:bg-amber-500 dark:hover:bg-amber-400 text-white dark:text-zinc-950 rounded-xl transition flex items-center gap-2.5 shadow-md active:scale-95 cursor-pointer"
             >
               <ShoppingBag className="w-4 h-4 text-amber-400 dark:text-zinc-950" />
               <span className="text-xs font-bold font-sans">Bag ({cartCount})</span>
             </button>
 
             <button
-              onClick={() => setViewMode('cms')}
-              className="hidden sm:inline-flex px-3.5 py-2 text-xs font-semibold text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
+              onClick={() => {
+                window.location.hash = '#cms';
+                setViewMode('cms');
+              }}
+              className="hidden sm:inline-flex px-3.5 py-2 text-xs font-semibold text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition cursor-pointer"
             >
               Staff Studio
             </button>
@@ -546,15 +587,21 @@ function StorefrontContent() {
             <h4 className="font-mono text-xs uppercase tracking-wider text-amber-400">Platform Control</h4>
             <div className="space-y-2">
               <button
-                onClick={() => setViewMode('mcp_login')}
-                className="w-full py-2.5 px-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-amber-400 border border-zinc-800 text-xs font-mono flex items-center justify-center gap-2 transition"
+                onClick={() => {
+                  window.location.hash = '#mcp-login';
+                  setViewMode('mcp_login');
+                }}
+                className="w-full py-2.5 px-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-amber-400 border border-zinc-800 text-xs font-mono flex items-center justify-center gap-2 transition cursor-pointer"
               >
                 <Lock className="w-3.5 h-3.5" />
                 <span>Owner Master Control Panel</span>
               </button>
               <button
-                onClick={() => setViewMode('cms')}
-                className="w-full py-2.5 px-3 rounded-xl bg-zinc-900/60 hover:bg-zinc-800/80 text-zinc-300 border border-zinc-800/60 text-xs font-mono flex items-center justify-center gap-2 transition"
+                onClick={() => {
+                  window.location.hash = '#cms';
+                  setViewMode('cms');
+                }}
+                className="w-full py-2.5 px-3 rounded-xl bg-zinc-900/60 hover:bg-zinc-800/80 text-zinc-300 border border-zinc-800/60 text-xs font-mono flex items-center justify-center gap-2 transition cursor-pointer"
               >
                 <span>Staff Management Studio</span>
               </button>
