@@ -1,0 +1,36 @@
+flowchart LR
+    subgraph Browser ["Customer Browser & SPA"]
+        EventTrigger["User Action (PageView, AddToCart, Purchase)"]
+        EventIdGen["Deterministic UUID event_id Generation"]
+        MetaPixel["Meta Pixel (Browser Event)"]
+        GA4Tag["GA4 gtag.js (Browser Event)"]
+    end
+
+    subgraph Server ["CENTERPOINT Backend Engine"]
+        ServerIngress["POST /api/v1/marketing/events"]
+        ConsentCheck{"Google Consent Mode v2 Validation"}
+        Dispatcher["EventDispatcherService (Queue/Sync)"]
+        PIIHasher["SHA-256 PII Hasher (email, phone, city)"]
+        MetaCAPI["Meta Conversions API Adapter"]
+        AttributionLog[("order_attributions (UTM, gclid, fbclid)")]
+    end
+
+    subgraph External ["Ad & Analytics Platforms"]
+        MetaServers["Meta Event Gateway (Deduplication via event_id)"]
+        GoogleServers["Google Analytics 4 & Google Ads"]
+    end
+
+    EventTrigger --> EventIdGen
+    EventIdGen --> MetaPixel
+    EventIdGen --> GA4Tag
+    EventIdGen --> ServerIngress
+
+    MetaPixel -.->|Browser Signal| MetaServers
+    GA4Tag -.->|Browser Signal| GoogleServers
+
+    ServerIngress --> ConsentCheck
+    ConsentCheck -->|Consented| Dispatcher
+    Dispatcher --> PIIHasher
+    PIIHasher --> MetaCAPI
+    MetaCAPI -->|Server CAPI Payload| MetaServers
+    Dispatcher --> AttributionLog

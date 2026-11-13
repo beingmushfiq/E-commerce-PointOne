@@ -11,18 +11,19 @@ A comprehensive static security audit of the repository reveals **six critical a
 | ID | Severity | Category (OWASP) | Location | Description | Remediation Plan |
 |---|---|---|---|---|---|
 | **SEC-01** | **CRITICAL** | A01: Broken Access Control | `backend/routes/api.php:56-70` | Unrestricted admin/inventory routes. Any authenticated customer token can call `/admin/analytics`, `/admin/logs`, and `/inventory/*`. | **RESOLVED (Phase 1):** Partitioned into distinct guards and permission middleware (`permission:manage-inventory,manage-catalog,admin` and `permission:access-admin,admin`). Verified via automated 403 response tests. |
-| **SEC-02** | **CRITICAL** | A08: Software & Data Integrity Failures | `backend/app/Services/PaymentService.php:20` | Payment simulation vulnerability. Any arbitrary string passed as payment method returns `completed`, allowing checkout bypass. | Strip simulation defaults. Every payment method must invoke an authorized adapter with server-side validation. |
-| **SEC-03** | **HIGH** | A02: Cryptographic Failures / Multi-Tenancy Leakage | Tenancy Layer (Missing) | Absence of tenant context isolation. Direct queries execute against a shared schema without host-header validation. | Implement dynamic tenant database connections resolved via trusted central domain mapping. |
-| **SEC-04** | **HIGH** | A03: Injection / CMS Untrusted Execution | Storefront CMS (Planned custom JS) | Custom tenant HTML/CSS/JS could execute in the authenticated management origin, leaking admin session tokens. | Render all tenant-supplied custom code within an isolated sandboxed `iframe` with a restrictive Content Security Policy (`CSP`). |
+| **SEC-02** | **CRITICAL** | A08: Software & Data Integrity Failures | `backend/app/Services/PaymentService.php:20` | Payment simulation vulnerability. Any arbitrary string passed as payment method returns `completed`, allowing checkout bypass. | **RESOLVED (Phase 3):** Replaced simulation with `PaymentGatewayManager` and strict driver adapters. Rejects unknown methods with `InvalidPaymentMethodException`. Idempotent verification recorded in `payment_idempotency_keys`. Verified via `PaymentGatewayTest.php`. |
+| **SEC-03** | **HIGH** | A02: Cryptographic Failures / Multi-Tenancy Leakage | Tenancy Layer (Missing) | Absence of tenant context isolation. Direct queries execute against a shared schema without host-header validation. | **RESOLVED (Phase 1):** Hybrid architecture: central DB + dynamic per-tenant DB resolved via trusted host domain lookup in `ResolveTenant` middleware. |
+| **SEC-04** | **HIGH** | A03: Injection / CMS Untrusted Execution | Storefront CMS (Planned custom JS) | Custom tenant HTML/CSS/JS could execute in the authenticated management origin, leaking admin session tokens. | **RESOLVED (Phase 5):** Tenant custom code rendered via dedicated `renderEmbed` endpoint inside `<iframe sandbox="allow-scripts allow-forms">` with strict `Content-Security-Policy: default-src 'none'; script-src 'unsafe-inline' https:; ...`. Opaque origin prevents cookie/token exfiltration and DOM access. Verified via `CmsPageBuilderTest.php`. |
 | **SEC-05** | **HIGH** | A04: Insecure Design (Concurrency Race) | `CheckoutController.php` & `Stock` | No pessimistic or optimistic locking during cart checkout. High-concurrency checkouts cause inventory overselling. | **RESOLVED (Phase 2):** Implemented `StockReservationService` with `SELECT ... FOR UPDATE` pessimistic database transactions and immutable `stock_movements` ledger logging. Verified via concurrency feature tests. |
-| **SEC-06** | **MEDIUM** | A09: Security Logging & Monitoring Failures | `AdminDashboardController.php:73` | Hardcoded system health checks. Health checks unconditionally report `redis: ok`, `mail: ok`, and `storage: ok`. | Replace with dynamic, real runtime probe validations (ping Redis, inspect disk write, verify mailer socket). |
+| **SEC-06** | **MEDIUM** | A09: Security Logging & Monitoring Failures | `AdminDashboardController.php:73` | Hardcoded system health checks. Health checks unconditionally report `redis: ok`, `mail: ok`, and `storage: ok`. | **RESOLVED (Phase 6):** Replaced hardcoded status with real runtime diagnostics: database PDO ping with latency_ms measurement, real disk write/read/unlink probe in storage, real cache put/get/forget probe, and mailer socket/config inspection. Verified via `PlatformMasterControlTest.php` and `AdminDashboardTest.php`. |
 
 ---
 
 ## 3. Deep Dive into Critical Vulnerabilities
 
-### SEC-01: Broken Access Control on Administrative & Operational Routes
-**Evidence:**
+### SEC-01: Broken Access Control on Administrative & Operational Routes [RESOLVED in Phase 1]
+**Status:** **RESOLVED**  
+**Evidence (Historical):**
 ```php
 // routes/api.php
 Route::middleware('auth:sanctum')->group(function () {
@@ -39,15 +40,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/health', [AdminDashboardController::class, 'health']);
 });
 ```
-**Impact:** A standard registered customer can view aggregate store revenue, audit logs, supplier contracts, and create warehouses simply by sending their Bearer token.
-**Required Fix:**
-1. Split `auth:sanctum` into distinct guards: `auth:staff` and `auth:customer`.
-2. Attach explicit authorization middleware: `middleware(['auth:staff', 'permission:manage-inventory'])`.
+**Impact:** A standard registered customer could view aggregate store revenue, audit logs, supplier contracts, and create warehouses simply by sending their Bearer token.  
+**Resolution:**
+1. Split authentication architecture into dedicated guards: `platform`, `staff`, `customer`.
+2. Implemented `CheckPermission` and `RequireRole` middleware enforcing RBAC.
+3. Secured `/inventory/*` with `permission:manage-inventory,manage-catalog,admin` and `/admin/*` with `permission:access-admin,admin`. Verified via PHPUnit tests.
 
 ---
 
-### SEC-02: Payment Simulation Vulnerability
-**Evidence:**
+### SEC-02: Payment Simulation Vulnerability [RESOLVED in Phase 3]
+**Status:** **RESOLVED**  
+**Evidence (Historical):**
 ```php
 // app/Services/PaymentService.php
 public function processPayment(Order $order, string $method, array $paymentDetails = []): Payment
@@ -61,10 +64,11 @@ public function processPayment(Order $order, string $method, array $paymentDetai
     };
     ...
 ```
-**Impact:** Passing `{"payment_method": "bypass_coupon"}` or `{"payment_method": "wire_transfer"}` bypasses payment collection and immediately sets the order to `processing` and payment status to `paid`.
-**Required Fix:**
-1. Eliminate `default => 'completed'`. Unknown payment methods must throw `InvalidPaymentMethodException`.
-2. Integrate provider-specific adapters with cryptographically verified callbacks.
+**Impact:** Passing `{"payment_method": "bypass_coupon"}` or `{"payment_method": "wire_transfer"}` bypassed payment collection and immediately set the order to `processing` and payment status to `paid`.  
+**Resolution:**
+1. Replaced simulation logic with `PaymentGatewayManager` and strict `PaymentGatewayContract` driver adapters (`BkashPaymentAdapter`, `SslCommerzPaymentAdapter`, `NagadPaymentAdapter`, `CodPaymentAdapter`, `WalletPaymentAdapter`, `TestPaymentAdapter`).
+2. Strictly throws `InvalidPaymentMethodException` on unknown or unconfigured payment methods.
+3. Enforces server-side verification and idempotent webhook logging via `payment_idempotency_keys` table. Verified via `PaymentGatewayTest.php`.
 
 ---
 

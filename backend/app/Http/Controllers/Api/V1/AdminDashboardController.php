@@ -67,26 +67,63 @@ class AdminDashboardController extends Controller
         ]]);
     }
 
-    // System Health Status
+    // System Health Status (SEC-06 Remediated: Real Dynamic Diagnostics)
     public function health(): JsonResponse
     {
-        // Dynamic Health Check
+        // 1. Real Database Probe
         $dbStatus = 'ok';
+        $dbLatency = 0.0;
         try {
+            $start = microtime(true);
             DB::connection()->getPdo();
-        } catch (\Exception $e) {
-            $dbStatus = 'error';
+            $dbLatency = round((microtime(true) - $start) * 1000, 2);
+        } catch (\Throwable $e) {
+            $dbStatus = 'error: ' . $e->getMessage();
+        }
+
+        // 2. Real Storage Write & Read Probe
+        $storageStatus = 'ok';
+        try {
+            $probeFile = storage_path('framework/cache/probe_' . uniqid() . '.tmp');
+            file_put_contents($probeFile, 'health-check');
+            if (!file_exists($probeFile) || file_get_contents($probeFile) !== 'health-check') {
+                $storageStatus = 'error: write verification failed';
+            }
+            @unlink($probeFile);
+        } catch (\Throwable $e) {
+            $storageStatus = 'error: ' . $e->getMessage();
+        }
+
+        // 3. Real Cache Probe
+        $cacheStatus = 'ok';
+        try {
+            $cacheKey = 'probe_' . uniqid();
+            \Illuminate\Support\Facades\Cache::put($cacheKey, 'alive', 5);
+            if (\Illuminate\Support\Facades\Cache::get($cacheKey) !== 'alive') {
+                $cacheStatus = 'error: readback failed';
+            }
+            \Illuminate\Support\Facades\Cache::forget($cacheKey);
+        } catch (\Throwable $e) {
+            $cacheStatus = 'error: ' . $e->getMessage();
+        }
+
+        // 4. Real Mail Configuration Probe
+        $mailStatus = 'ok';
+        $mailDriver = config('mail.default');
+        if (empty($mailDriver) || ($mailDriver === 'smtp' && empty(config('mail.mailers.smtp.host')))) {
+            $mailStatus = 'unconfigured';
         }
 
         return response()->json([
             'status' => 'success',
-            'data' => [
-                'database' => $dbStatus,
-                'redis' => 'ok',
-                'storage' => 'ok',
-                'mail' => 'ok',
-                'timestamp' => now()->toIso8601String(),
-            ]
+            'data'   => [
+                'database'     => $dbStatus,
+                'db_latency_ms'=> $dbLatency,
+                'cache'        => $cacheStatus,
+                'storage'      => $storageStatus,
+                'mail'         => $mailStatus,
+                'timestamp'    => now()->toIso8601String(),
+            ],
         ]);
     }
 }

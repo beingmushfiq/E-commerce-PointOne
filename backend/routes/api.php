@@ -9,12 +9,29 @@ use App\Http\Controllers\Api\V1\CheckoutController;
 use App\Http\Controllers\Api\V1\InventoryController;
 use App\Http\Controllers\Api\V1\MarketingController;
 use App\Http\Controllers\Api\V1\AdminDashboardController;
+use App\Http\Controllers\Api\V1\PaymentController;
+use App\Http\Controllers\Api\V1\FulfillmentController;
+use App\Http\Controllers\Api\V1\AccountingController;
+use App\Http\Controllers\Api\V1\Platform\PlatformDashboardController;
+use App\Http\Controllers\Api\V1\Platform\TenantLifecycleController;
+use App\Http\Controllers\Api\V1\Platform\PlanManagementController;
+use App\Http\Controllers\Api\V1\AiAssistantController;
+use App\Http\Controllers\Api\V1\SeoController;
 
 Route::prefix('v1')->group(function () {
-    // Public Marketing Routes
+    // Public Marketing & Tracking Routes
     Route::post('/marketing/apply-coupon', [MarketingController::class, 'applyCoupon']);
     Route::get('/marketing/flash-sales', [MarketingController::class, 'activeFlashSales']);
     Route::post('/marketing/subscribe', [MarketingController::class, 'subscribe']);
+    Route::post('/marketing/events', [MarketingController::class, 'trackEvent']);
+    Route::get('/marketing/feeds/google-merchant.xml', [MarketingController::class, 'googleMerchantFeed']);
+    Route::get('/marketing/config', [MarketingController::class, 'config']);
+
+    // Public SEO & Structured Data Routes
+    Route::get('/seo/sitemap.xml', [SeoController::class, 'sitemap']);
+    Route::get('/seo/robots.txt', [SeoController::class, 'robotsTxt']);
+    Route::get('/seo/product/{slug}', [SeoController::class, 'productJsonLd']);
+    Route::post('/seo/breadcrumbs', [SeoController::class, 'breadcrumbJsonLd']);
 
     // Public Cart & Checkout Routes
     Route::get('/cart', [CheckoutController::class, 'getCart']);
@@ -29,7 +46,10 @@ Route::prefix('v1')->group(function () {
     // Public CMS Routes
     Route::get('/cms/sliders', [CmsController::class, 'sliders']);
     Route::get('/cms/menus', [CmsController::class, 'menus']);
+    Route::get('/cms/theme', [CmsController::class, 'theme']);
     Route::get('/cms/pages/{slug}', [CmsController::class, 'page']);
+    Route::get('/cms/pages/{slug}/sections', [CmsController::class, 'pageSections']);
+    Route::get('/cms/embeds/{token}/render', [CmsController::class, 'renderEmbed']);
     Route::get('/cms/blogs', [CmsController::class, 'blogPosts']);
     Route::get('/cms/blogs/{slug}', [CmsController::class, 'blogPost']);
     Route::get('/cms/faqs', [CmsController::class, 'faqs']);
@@ -37,6 +57,16 @@ Route::prefix('v1')->group(function () {
     // Public Auth Routes
     Route::post('/auth/register', [AuthController::class, 'register']);
     Route::post('/auth/login', [AuthController::class, 'login']);
+
+    // Payment Callbacks & Webhooks
+    Route::post('/payments/verify', [PaymentController::class, 'verify']);
+    Route::post('/payments/webhook/{gateway}', [PaymentController::class, 'webhook']);
+
+    // Fulfillment Webhooks
+    Route::post('/fulfillment/webhook/{courier}', [FulfillmentController::class, 'webhook']);
+
+    // Customer Shopping Assistant (Local-first, bilingual)
+    Route::post('/ai/chat', [AiAssistantController::class, 'chat']);
 
     // Protected Routes
     Route::middleware('auth:sanctum')->group(function () {
@@ -52,7 +82,10 @@ Route::prefix('v1')->group(function () {
         Route::get('/customer/tickets', [CustomerController::class, 'tickets']);
         Route::post('/customer/tickets', [CustomerController::class, 'storeTicket']);
 
-        // Inventory Management (Restricted to Staff with inventory/catalog permissions or Admin)
+        // Order Tracking
+        Route::get('/fulfillment/track/{consignmentId}', [FulfillmentController::class, 'track']);
+
+        // Inventory & Fulfillment Operations (Restricted to Staff with inventory/catalog permissions or Admin)
         Route::middleware(['permission:manage-inventory,manage-catalog,admin'])->group(function () {
             Route::get('/inventory/warehouses', [InventoryController::class, 'warehouses']);
             Route::post('/inventory/warehouses', [InventoryController::class, 'storeWarehouse']);
@@ -60,6 +93,9 @@ Route::prefix('v1')->group(function () {
             Route::get('/inventory/suppliers', [InventoryController::class, 'suppliers']);
             Route::post('/inventory/suppliers', [InventoryController::class, 'storeSupplier']);
             Route::get('/inventory/purchase-orders', [InventoryController::class, 'purchaseOrders']);
+
+            // Consignment Booking
+            Route::post('/fulfillment/book', [FulfillmentController::class, 'book']);
         });
 
         // Admin Analytics & Health Check (Restricted to Staff with access-admin permission or Admin)
@@ -67,6 +103,59 @@ Route::prefix('v1')->group(function () {
             Route::get('/admin/analytics', [AdminDashboardController::class, 'analytics']);
             Route::get('/admin/logs', [AdminDashboardController::class, 'logs']);
             Route::get('/admin/health', [AdminDashboardController::class, 'health']);
+        });
+
+        // Financial & Double-Entry Accounting (Restricted to Staff with manage-finance permission or Admin)
+        Route::middleware(['permission:manage-finance,admin'])->group(function () {
+            Route::get('/accounting/accounts', [AccountingController::class, 'accounts']);
+            Route::post('/accounting/accounts', [AccountingController::class, 'storeAccount']);
+            Route::get('/accounting/journal-entries', [AccountingController::class, 'journalEntries']);
+            Route::post('/accounting/journal-entries', [AccountingController::class, 'storeJournalEntry']);
+            Route::post('/accounting/journal-entries/{id}/reverse', [AccountingController::class, 'reverseJournalEntry']);
+            Route::get('/accounting/reports/trial-balance', [AccountingController::class, 'trialBalance']);
+            Route::get('/accounting/reports/profit-and-loss', [AccountingController::class, 'profitAndLoss']);
+            Route::get('/accounting/reports/balance-sheet', [AccountingController::class, 'balanceSheet']);
+        });
+        // CMS & Visual Page Builder (Restricted to Staff with manage-cms permission or Admin)
+        Route::middleware(['permission:manage-cms,admin'])->group(function () {
+            Route::get('/cms/admin/pages', [CmsController::class, 'adminPages']);
+            Route::post('/cms/admin/pages', [CmsController::class, 'adminStorePage']);
+            Route::put('/cms/admin/pages/{id}', [CmsController::class, 'adminUpdatePage']);
+            Route::post('/cms/admin/pages/{id}/publish', [CmsController::class, 'adminPublishPage']);
+            Route::post('/cms/admin/pages/{id}/rollback', [CmsController::class, 'adminRollbackPage']);
+            Route::post('/cms/admin/embeds', [CmsController::class, 'adminStoreEmbed']);
+            Route::put('/cms/admin/theme', [CmsController::class, 'adminUpdateTheme']);
+        });
+
+        // Platform Master Control Panel Operations
+        Route::prefix('platform')->group(function () {
+            Route::get('/kpis', [PlatformDashboardController::class, 'kpis']);
+            Route::get('/health', [PlatformDashboardController::class, 'health']);
+            Route::get('/audit-logs', [PlatformDashboardController::class, 'auditLogs']);
+
+            Route::get('/tenants', [TenantLifecycleController::class, 'index']);
+            Route::post('/tenants', [TenantLifecycleController::class, 'store']);
+            Route::get('/tenants/{id}', [TenantLifecycleController::class, 'show']);
+            Route::post('/tenants/{id}/suspend', [TenantLifecycleController::class, 'suspend']);
+            Route::post('/tenants/{id}/activate', [TenantLifecycleController::class, 'activate']);
+
+            Route::get('/plans', [PlanManagementController::class, 'index']);
+            Route::post('/plans', [PlanManagementController::class, 'store']);
+            Route::put('/plans/{id}', [PlanManagementController::class, 'update']);
+        });
+
+        // Staff AI Business Intelligence Assistant & Configuration
+        Route::middleware(['permission:access-admin,admin'])->group(function () {
+            Route::post('/ai/business-query', [AiAssistantController::class, 'businessQuery']);
+            Route::get('/ai/config', [AiAssistantController::class, 'config']);
+            Route::put('/ai/config', [AiAssistantController::class, 'updateConfig']);
+        });
+
+        // Marketing Administration & Attribution Analytics
+        Route::middleware(['permission:manage-marketing,manage-catalog,admin'])->group(function () {
+            Route::put('/marketing/config', [MarketingController::class, 'updateConfig']);
+            Route::get('/marketing/events/log', [MarketingController::class, 'eventsLog']);
+            Route::get('/marketing/attribution/stats', [MarketingController::class, 'attributionStats']);
         });
     });
 });

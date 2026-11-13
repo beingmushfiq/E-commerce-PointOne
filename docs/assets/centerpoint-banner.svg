@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0e17" />
+      <stop offset="50%" stop-color="#0d1117" />
+      <stop offset="100%" stop-color="#161b22" />
+    </linearGradient>
+
+    <!-- Accent Gradient -->
+    <linearGradient id="blueGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#2563eb" stop-opacity="0.8" />
+      <stop offset="50%" stop-color="#3b82f6" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#60a5fa" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Monogram Gold/Amber Gradient -->
+    <linearGradient id="goldMonogram" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+
+    <!-- Subtle Grid Pattern -->
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#ffffff" stroke-width="1" stroke-opacity="0.03" />
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="360" rx="16" fill="url(#bgGrad)" />
+  <rect width="1200" height="360" rx="16" fill="url(#grid)" />
+
+  <!-- Subtle glow line at top border -->
+  <line x1="100" y1="1" x2="1100" y2="1" stroke="url(#blueGlow)" stroke-width="2" />
+
+  <!-- Ambient Light Circle -->
+  <circle cx="200" cy="180" r="160" fill="#2563eb" fill-opacity="0.06" filter="blur(40px)" />
+
+  <!-- CENTERPOINT Logo Monogram -->
+  <g transform="translate(100, 90)">
+    <rect width="180" height="180" rx="44" fill="#161b22" stroke="#30363d" stroke-width="2" />
+    <path d="M 45 45 H 125 C 135 45 142 52 142 62 V 75 H 80 V 105 H 125 C 135 105 142 112 142 122 V 135 H 45 Z" fill="url(#goldMonogram)" />
+    <circle cx="138" cy="45" r="11" fill="#fbbf24" />
+  </g>
+
+  <!-- Title & Typography -->
+  <g transform="translate(330, 0)">
+    <!-- Pill Badge -->
+    <g transform="translate(0, 95)">
+      <rect width="210" height="28" rx="14" fill="#1e293b" stroke="#334155" stroke-width="1" />
+      <circle cx="16" cy="14" r="4" fill="#38bdf8" />
+      <text x="28" y="18" fill="#94a3b8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="11" font-weight="600" letter-spacing="1.5">FLAGSHIP PLATFORM</text>
+    </g>
+
+    <!-- Main Title -->
+    <text x="0" y="175" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="52" font-weight="800" letter-spacing="-1">CENTERPOINT</text>
+
+    <!-- Tagline -->
+    <text x="2" y="215" fill="#60a5fa" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="18" font-weight="600" letter-spacing="3">ONE PLATFORM. COMPLETE COMMERCE.</text>
+
+    <!-- Subtitle -->
+    <text x="2" y="252" fill="#94a3b8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14" font-weight="400" letter-spacing="0.5">
+      Dual-Edition Modular Commerce Ecosystem · Multi-Tenant SaaS &amp; Standalone Commercial Edition
+    </text>
+  </g>
+
+  <!-- Right-side Architecture Badges -->
+  <g transform="translate(980, 105)">
+    <!-- Node: SaaS Multi-Tenant -->
+    <g transform="translate(0, 0)">
+      <rect width="140" height="42" rx="8" fill="#161b22" stroke="#2563eb" stroke-width="1.5" stroke-opacity="0.7" />
+      <text x="70" y="22" fill="#e2e8f0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" font-weight="700" text-anchor="middle">SaaS Edition</text>
+      <text x="70" y="34" fill="#64748b" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="9" text-anchor="middle">Hybrid Multi-Tenant</text>
+    </g>
+
+    <!-- Node: Standalone Commercial -->
+    <g transform="translate(0, 56)">
+      <rect width="140" height="42" rx="8" fill="#161b22" stroke="#d97706" stroke-width="1.5" stroke-opacity="0.7" />
+      <text x="70" y="22" fill="#e2e8f0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" font-weight="700" text-anchor="middle">Standalone</text>
+      <text x="70" y="34" fill="#64748b" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="9" text-anchor="middle">Independent License</text>
+    </g>
+
+    <!-- Node: cPanel / VPS Ready -->
+    <g transform="translate(0, 112)">
+      <rect width="140" height="42" rx="8" fill="#161b22" stroke="#10b981" stroke-width="1.5" stroke-opacity="0.7" />
+      <text x="70" y="22" fill="#e2e8f0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" font-weight="700" text-anchor="middle">cPanel &amp; Cloud</text>
+      <text x="70" y="34" fill="#64748b" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="9" text-anchor="middle">Zero-Daemon Fallback</text>
+    </g>
+  </g>
+</svg>

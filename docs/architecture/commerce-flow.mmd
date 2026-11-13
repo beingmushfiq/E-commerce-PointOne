@@ -1,0 +1,41 @@
+sequenceDiagram
+    autonumber
+    actor Customer as Store Customer
+    participant UI as React Storefront
+    participant API as Checkout Controller
+    participant Stock as StockReservationService
+    participant Pay as PaymentGatewayManager
+    participant FSM as OrderStateMachine
+    participant Courier as CourierManager
+    participant Ledger as CommerceLedgerBridge
+
+    Customer->>UI: Select Product & Options
+    UI->>API: POST /api/v1/checkout/process
+    activate API
+    API->>Stock: reserveStock() [SELECT FOR UPDATE]
+    Note over Stock: Pessimistic lock prevents overselling
+    Stock-->>API: Stock Reserved (15 min TTL)
+    
+    API->>Pay: initiatePayment(bKash / SSLCommerz / COD)
+    Pay-->>API: Payment Session / Gateway Redirect
+    API-->>UI: Order Pending & Gateway URL
+    deactivate API
+
+    Customer->>Pay: Authorize Payment
+    Pay->>API: POST /api/v1/payments/verify (Webhook/Callback)
+    activate API
+    API->>FSM: transitionTo(PAID)
+    API->>Stock: commitStock() [Deduct physical inventory]
+    API->>Ledger: postOrderPaidJournalEntry()
+    Note over Ledger: Sum(Debits) == Sum(Credits) [Cash Dr / Revenue Cr]
+    API-->>Pay: 200 OK
+    deactivate API
+
+    Customer->>UI: View Confirmed Order
+
+    Note over API,Courier: Fulfillment Phase
+    API->>Courier: bookConsignment(Steadfast / Pathao / RedX)
+    Courier-->>API: Consignment Tracking Code
+    API->>FSM: transitionTo(SHIPPED)
+    API->>Ledger: postFulfillmentCogsJournalEntry()
+    Note over Ledger: COGS Dr / Inventory Cr

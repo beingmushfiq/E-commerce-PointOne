@@ -1,0 +1,53 @@
+flowchart TB
+    subgraph ClientLayer ["Client & Experience Layer"]
+        Storefront["Storefront SPA (React 19 / TypeScript / Vite)"]
+        Studio["Management Studio (Admin / Staff CMS)"]
+        MCP["Master Control Panel (Platform Admin)"]
+        PWA["Mobile PWA (Service Worker / Manifest)"]
+    end
+
+    subgraph GatewayLayer ["API & Ingress Layer"]
+        API["Laravel 13 REST API Gateway"]
+        AuthGuards{"Auth & Guard Partition"}
+        GuardPlatform["Guard: platform (PlatformAdmin)"]
+        GuardStaff["Guard: staff (User + Spatie RBAC)"]
+        GuardCustomer["Guard: customer (Customer Sanctum)"]
+    end
+
+    subgraph TenancyLayer ["Tenancy & Routing Layer"]
+        EditionMgr["EditionManager (standalone | saas)"]
+        ResolveTenant["ResolveTenant Middleware"]
+        TenantMgr["TenantManager & Dynamic Connection"]
+    end
+
+    subgraph DomainEngines ["Domain Business Engines"]
+        CatalogEngine["Catalog & Variant Matrix"]
+        StockEngine["StockReservationService (Pessimistic Locks)"]
+        OrderFSM["OrderStateMachine (16 Deterministic States)"]
+        PaymentMgr["PaymentGatewayManager (bKash, SSL, Nagad, COD)"]
+        CourierMgr["CourierManager (Steadfast, Pathao, RedX)"]
+        LedgerEngine["Double-Entry Accounting (Sum debits == Sum credits)"]
+        MarketingEngine["Marketing CAPI & Event Dispatcher"]
+        AiEngine["Local-First Bilingual AI Assistant"]
+    end
+
+    subgraph DataLayer ["Data & Storage Layer"]
+        CentralDB[("Central Database (Tenants, Plans, Subscriptions)")]
+        TenantDB[("Tenant Database (Catalog, Orders, Ledger, CMS)")]
+        LocalCache[("Cache & Queue (Database / Redis)")]
+    end
+
+    ClientLayer --> API
+    API --> AuthGuards
+    AuthGuards --> GuardPlatform
+    AuthGuards --> GuardStaff
+    AuthGuards --> GuardCustomer
+
+    API --> EditionMgr
+    EditionMgr --> ResolveTenant
+    ResolveTenant --> TenantMgr
+
+    TenantMgr --> DomainEngines
+    DomainEngines --> TenantDB
+    GuardPlatform --> CentralDB
+    DomainEngines --> LocalCache

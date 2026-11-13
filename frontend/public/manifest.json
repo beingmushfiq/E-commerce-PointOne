@@ -1,0 +1,23 @@
+{
+  "name": "CENTERPOINT — Flagship Commerce",
+  "short_name": "CENTERPOINT",
+  "description": "Bespoke Artisanal Luxury Commerce Platform",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#09090b",
+  "theme_color": "#d97706",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["shopping", "lifestyle", "business"],
+  "lang": "en-US",
+  "dir": "ltr",
+  "prefer_related_applications": false
+}
+
