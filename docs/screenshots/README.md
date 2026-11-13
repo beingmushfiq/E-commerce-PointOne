@@ -53,3 +53,4 @@ This directory holds authentic visual assets and product captures for CENTERPOIN
    ```
 3. Capture screens using DevTools Device Toolbar or browser screenshot tools at the specified resolutions.
 4. Place files in this directory (`docs/screenshots/`) following the exact file naming convention above.
+
