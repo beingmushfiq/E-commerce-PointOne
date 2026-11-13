@@ -8,20 +8,21 @@
 [![Laravel Framework](https://img.shields.io/badge/Laravel-13.x-FF2D20?style=flat-square&logo=laravel&logoColor=white)](https://laravel.com)
 [![React](https://img.shields.io/badge/React-19.x-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Vite](https://img.shields.io/badge/Vite-8.x-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-v4.x-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
-[![Automated Tests](https://img.shields.io/badge/PHPUnit-87%20Passed%20%7C%20442%20Assertions-10B981?style=flat-square&logo=php&logoColor=white)](https://phpunit.de)
+[![Motion & Smooth Scroll](https://img.shields.io/badge/GSAP%203%20%2B%20Lenis-Luxury%20Kinetic-amber?style=flat-square)](https://gsap.com)
+[![Automated Tests](https://img.shields.io/badge/PHPUnit-90%20Passed%20%7C%20462%20Assertions-10B981?style=flat-square&logo=php&logoColor=white)](https://phpunit.de)
+[![Created by DevCenterPoint](https://img.shields.io/badge/Engineered%20by-DevCenterPoint-D97706?style=flat-square&logo=googlechrome&logoColor=white)](https://devcenterpoint.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
 
 <br/>
 
-**One Platform. Complete Commerce.**
+**One Platform. Complete Commerce.**  
+*Designed, Developed & Engineered by [DevCenterPoint](https://devcenterpoint.com)*
 
 *CENTERPOINT is an enterprise-grade, dual-edition commerce platform that unifies curated storefronts, multi-warehouse operations, double-entry accounting, local-first intelligence, and multi-tenant SaaS capabilities into one modular ecosystem.*
 
 <br/>
 
-[Overview](#overview) • [Highlights](#highlights) • [Capabilities](#capabilities) • [Architecture](#architecture) • [Tech Stack](#tech-stack) • [Quick Start](#quick-start) • [Deployment](#deployment) • [Security](#security) • [Roadmap](#roadmap)
+[Overview](#overview) • [Highlights](#highlights) • [UI/UX & Master Control](#ui-ux-design) • [Capabilities](#capabilities) • [Architecture](#architecture) • [Tech Stack](#tech-stack) • [Quick Start](#quick-start) • [Deployment](#deployment) • [Security](#security) • [Roadmap](#roadmap)
 
 ---
 
@@ -76,6 +77,34 @@ Built from the ground up on a **Dual-Edition Decoupled Architecture**, CENTERPOI
 - **cPanel Operating Profile:** Built-in support for shared hosting constraints, including a queue worker cron fallback (`queue:work --stop-when-empty`), database-backed queues, and database cache.
 - **Three-Tier Auth Partitioning:** Dedicated, isolated authentication guards for Platform Admins (`platform`), Tenant Staff (`staff`), and Store Customers (`customer`).
 - **Immutable Financial & Stock Ledgers:** Physical inventory and financial journal entries are append-only. Corrections require explicit compensating reversals.
+
+---
+
+<a id="ui-ux-design"></a>
+## 💎 Luxury Visual Architecture & Omnipotent Master Control Panel
+
+Engineered by **[DevCenterPoint](https://devcenterpoint.com)**, CENTERPOINT features an editorial luxury aesthetic designed to completely eliminate generic "AI-sloppy" commerce templates.
+
+### 🎨 Visual Identity & Kinetic Physics
+- **Obsidian Liquid Gold & Alabaster Palette:** Deep canvas obsidian (`#09090B`) and zinc surfaces illuminated by champagne gold (`#D97706` / `#F59E0B`). Light Mode is default, styled with warm alabaster (`#FAFAF9`), pure glass cards, and crisp typography.
+- **Circular Spatial Theme Reveal:** Switching themes triggers a smooth circular `clip-path` expansion starting dynamically from the exact screen coordinates of the clicked toggle button via the native View Transitions API.
+- **5 Selectable Motion Profiles (Lenis + GSAP 3):**
+  1. `editorial_flow` (Default): Subtle, high-velocity inertia with delicate fade-up and magnetic buttons.
+  2. `cinematic_showcase`: Interactive 3D perspective tilt, mouse-tracking spotlights, and multi-layer parallax depth.
+  3. `minimal_precision`: Zero parallax, ultra-snappy 120ms transitions, clean micro-damping.
+  4. `velvet_luxury`: Slow graceful liquid easing, delayed stagger, deep blur shifts.
+  5. `kinetic_dynamic`: Spring physics, playful hover attraction, scale popovers.
+- **Bespoke Luxury Preloader:** Geometric monogram SVG draw animation with real numerical counter (0–100%) and velvet dissolve.
+- **Bangladeshi Taka & Multi-Currency Engine:** Default BDT currency format (`৳ 250,000.00`) with instant header currency switching (`৳ BDT`, `$ USD`, `€ EUR`).
+
+### 🎛️ Omnipotent Master Control Panel (MCP)
+Located at the secret high-security portal (`/#mcp-login` / `/platform/control-center`), restricted exclusively to the Superadmin (`platform` guard):
+- **Live Theme Customizer:** Real-time overrides for primary/accent colors, font scales, border radiuses, and glass blur intensities.
+- **Dynamic CMS Section Composer:** Live editing of hero slides, marquee tickers, storytelling banners, and CTA links.
+- **Currency & Gateway Levers:** Live exchange rate management and one-click toggles for bKash, SSLCommerz, Nagad, Cash on Delivery, Steadfast Courier, and Pathao Logistics.
+- **Sandboxed Custom Code:** Injects custom tenant CSS/JS safely inside isolated iframes with strict CSP.
+- **Branding Control:** Toggle DevCenterPoint attribution, custom logos, and platform slogans.
+- **Live Telemetry & Instant Reset:** Real-time monitoring of database query latency, cache hit health, and a one-click "Reset to Factory Defaults" failsafe.
 
 ---
 
@@ -504,8 +533,9 @@ This project is open-source software licensed under the **[MIT License](LICENSE)
 - **Repository:** [https://github.com/beingmushfiq/E-commerce-PointOne](https://github.com/beingmushfiq/E-commerce-PointOne)
 - **Primary Market:** Bangladesh & Global Retail / Wholesale Commerce
 - **Architecture:** Modular Multi-Tenant SaaS + Standalone Commercial Edition
+- **Designed & Engineered by:** [DevCenterPoint](https://devcenterpoint.com)
 
 <div align="center">
   <br/>
-  <p>© 2026 <b>CENTERPOINT</b>. Built with precision, architectural rigor, and dedication to modern commerce.</p>
+  <p>© 2026 <b>CENTERPOINT</b>. Designed, Developed & Engineered by <a href="https://devcenterpoint.com"><b>DevCenterPoint</b></a>. Built with architectural rigor, kinetic poise, and dedication to modern luxury commerce.</p>
 </div>

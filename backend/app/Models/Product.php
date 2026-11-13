@@ -43,6 +43,21 @@ class Product extends Model
         'has_variants' => 'boolean',
     ];
 
+    protected $appends = ['image_url'];
+
+    public function getImageUrlAttribute(): string
+    {
+        $primary = $this->relationLoaded('images')
+            ? ($this->images->firstWhere('is_primary', true) ?? $this->images->first())
+            : $this->images()->where('is_primary', true)->first() ?? $this->images()->first();
+
+        if ($primary && !empty($primary->image_path)) {
+            return $primary->image_path;
+        }
+
+        return 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=800&q=80';
+    }
+
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);

@@ -15,10 +15,15 @@ use App\Http\Controllers\Api\V1\AccountingController;
 use App\Http\Controllers\Api\V1\Platform\PlatformDashboardController;
 use App\Http\Controllers\Api\V1\Platform\TenantLifecycleController;
 use App\Http\Controllers\Api\V1\Platform\PlanManagementController;
+use App\Http\Controllers\Api\V1\Platform\StorefrontCustomizerController;
 use App\Http\Controllers\Api\V1\AiAssistantController;
 use App\Http\Controllers\Api\V1\SeoController;
 
 Route::prefix('v1')->group(function () {
+    // Public Storefront Configuration & Theming
+    Route::get('/storefront/config', [StorefrontCustomizerController::class, 'publicConfig']);
+    Route::post('/platform/auth/mcp-login', [StorefrontCustomizerController::class, 'mcpLogin']);
+
     // Public Marketing & Tracking Routes
     Route::post('/marketing/apply-coupon', [MarketingController::class, 'applyCoupon']);
     Route::get('/marketing/flash-sales', [MarketingController::class, 'activeFlashSales']);
@@ -129,6 +134,11 @@ Route::prefix('v1')->group(function () {
 
         // Platform Master Control Panel Operations
         Route::prefix('platform')->group(function () {
+            // Omnipotent Storefront & Platform Customizer
+            Route::get('/customizer/settings', [StorefrontCustomizerController::class, 'getMasterSettings']);
+            Route::post('/customizer/settings', [StorefrontCustomizerController::class, 'updateSettings']);
+            Route::post('/customizer/reset', [StorefrontCustomizerController::class, 'resetToDefaults']);
+
             Route::get('/kpis', [PlatformDashboardController::class, 'kpis']);
             Route::get('/health', [PlatformDashboardController::class, 'health']);
             Route::get('/audit-logs', [PlatformDashboardController::class, 'auditLogs']);

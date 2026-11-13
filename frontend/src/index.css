@@ -1,28 +1,54 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @layer base {
   :root {
-    --bg-page: #fafafa;
+    --bg-page: #fafaf9;
     --bg-surface: #ffffff;
-    --bg-surface-elevated: #f4f4f5;
     --border-subtle: #e4e4e7;
-    --border-accent: #d4d4d8;
-    --text-primary: #18181b;
-    --text-secondary: #71717a;
-    --text-tertiary: #a1a1aa;
-    --accent-gold: #b45309;
-    --accent-gold-glow: rgba(180, 83, 9, 0.1);
+    --text-primary: #0c0a09;
+    --accent-gold: #d97706;
+  }
+
+  .dark {
+    --bg-page: #09090b;
+    --bg-surface: #121215;
+    --border-subtle: #27272a;
+    --text-primary: #f4f4f5;
+    --accent-gold: #f59e0b;
   }
 
   body {
     background-color: var(--bg-page);
     color: var(--text-primary);
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     letter-spacing: -0.01em;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
   }
+
+  h1, h2, h3, .font-serif {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+  }
+
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+/* View Transitions for Circular Theme Reveal */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-old(root) {
+  z-index: 1;
+}
+::view-transition-new(root) {
+  z-index: 9999;
+}
 
   /* Custom refined light scrollbar */
   ::-webkit-scrollbar {
@@ -39,7 +65,6 @@
   ::-webkit-scrollbar-thumb:hover {
     background: #a1a1aa;
   }
-}
 
 /* Glass & Vignette Effects */
 .editorial-glass {

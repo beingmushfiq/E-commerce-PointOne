@@ -32,7 +32,7 @@ class ProductFeedService
             $item->addChild('g:link', "{$appUrl}/products/{$product->slug}", 'http://base.google.com/ns/1.0');
 
             $imageLink = $product->image_url ?: "{$appUrl}/assets/product-placeholder.png";
-            $item->addChild('g:image_link', $imageLink, 'http://base.google.com/ns/1.0');
+            $item->addChild('g:image_link', htmlspecialchars($imageLink), 'http://base.google.com/ns/1.0');
 
             $availability = $product->quantity > 0 ? 'in_stock' : 'out_of_stock';
             $item->addChild('g:availability', $availability, 'http://base.google.com/ns/1.0');

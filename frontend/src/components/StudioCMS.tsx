@@ -95,7 +95,7 @@ export const StudioCMS: React.FC<StudioCMSProps> = ({
               />
             </div>
 
-            <EditorialButton variant="bronze" size="lg" className="w-full mt-2" type="submit">
+            <EditorialButton variant="primary" size="lg" className="w-full mt-2" type="submit">
               Sign In to Admin Studio
             </EditorialButton>
           </form>
