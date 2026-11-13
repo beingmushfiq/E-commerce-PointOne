@@ -19,18 +19,40 @@ trait HasRoles
         $this->roles()->syncWithoutDetaching([$roleObj->id]);
     }
 
-    public function hasRole(string $role): bool
+    public function hasRole(string|array $roles): bool
     {
-        return $this->roles->contains('name', $role);
+        $roleList = (array) $roles;
+
+        if ($this->relationLoaded('roles')) {
+            return $this->roles->contains(fn ($r) => in_array($r->name, $roleList, true));
+        }
+
+        return $this->roles()->whereIn('name', $roleList)->exists();
     }
 
     public function hasPermissionTo(string $permissionName): bool
     {
-        foreach ($this->roles as $role) {
-            if ($role->permissions->contains('name', $permissionName)) {
-                return true;
-            }
+        if ($this->hasRole('admin')) {
+            return true;
         }
-        return false;
+
+        if ($this->relationLoaded('roles')) {
+            foreach ($this->roles as $role) {
+                if ($role->relationLoaded('permissions')) {
+                    if ($role->permissions->contains('name', $permissionName)) {
+                        return true;
+                    }
+                } else {
+                    if ($role->permissions()->where('name', $permissionName)->exists()) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        return $this->roles()->whereHas('permissions', function ($query) use ($permissionName) {
+            $query->where('name', $permissionName);
+        })->exists();
     }
 }

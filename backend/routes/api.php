@@ -52,16 +52,21 @@ Route::prefix('v1')->group(function () {
         Route::get('/customer/tickets', [CustomerController::class, 'tickets']);
         Route::post('/customer/tickets', [CustomerController::class, 'storeTicket']);
 
-        // Inventory Management
-        Route::get('/inventory/warehouses', [InventoryController::class, 'warehouses']);
-        Route::post('/inventory/warehouses', [InventoryController::class, 'storeWarehouse']);
-        Route::get('/inventory/stocks', [InventoryController::class, 'stocks']);
-        Route::get('/inventory/suppliers', [InventoryController::class, 'suppliers']);
-        Route::post('/inventory/suppliers', [InventoryController::class, 'storeSupplier']);
-        Route::get('/inventory/purchase-orders', [InventoryController::class, 'purchaseOrders']);
-        // Admin Analytics & Health Check
-        Route::get('/admin/analytics', [AdminDashboardController::class, 'analytics']);
-        Route::get('/admin/logs', [AdminDashboardController::class, 'logs']);
-        Route::get('/admin/health', [AdminDashboardController::class, 'health']);
+        // Inventory Management (Restricted to Staff with inventory/catalog permissions or Admin)
+        Route::middleware(['permission:manage-inventory,manage-catalog,admin'])->group(function () {
+            Route::get('/inventory/warehouses', [InventoryController::class, 'warehouses']);
+            Route::post('/inventory/warehouses', [InventoryController::class, 'storeWarehouse']);
+            Route::get('/inventory/stocks', [InventoryController::class, 'stocks']);
+            Route::get('/inventory/suppliers', [InventoryController::class, 'suppliers']);
+            Route::post('/inventory/suppliers', [InventoryController::class, 'storeSupplier']);
+            Route::get('/inventory/purchase-orders', [InventoryController::class, 'purchaseOrders']);
+        });
+
+        // Admin Analytics & Health Check (Restricted to Staff with access-admin permission or Admin)
+        Route::middleware(['permission:access-admin,admin'])->group(function () {
+            Route::get('/admin/analytics', [AdminDashboardController::class, 'analytics']);
+            Route::get('/admin/logs', [AdminDashboardController::class, 'logs']);
+            Route::get('/admin/health', [AdminDashboardController::class, 'health']);
+        });
     });
 });

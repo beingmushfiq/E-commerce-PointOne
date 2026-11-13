@@ -3,6 +3,8 @@
 namespace Tests\Feature\Api;
 
 use App\Models\User;
+use App\Models\Role;
+use App\Models\Permission;
 use App\Models\Warehouse;
 use App\Models\Supplier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -13,10 +15,26 @@ class InventoryTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_can_create_warehouse_and_fetch_list(): void
+    public function test_customer_cannot_manage_inventory(): void
     {
-        $user = User::factory()->create();
-        Sanctum::actingAs($user);
+        $customer = User::factory()->create();
+        Sanctum::actingAs($customer);
+
+        $response = $this->postJson('/api/v1/inventory/warehouses', [
+            'name' => 'Unauthorized Warehouse',
+            'code' => 'WH-ROGUE',
+        ]);
+
+        // SEC-01 Remediation: Must be 403 Forbidden
+        $response->assertStatus(403);
+    }
+
+    public function test_admin_can_create_warehouse_and_fetch_list(): void
+    {
+        $admin = User::factory()->create();
+        $adminRole = Role::create(['name' => 'admin', 'display_name' => 'Admin', 'guard_name' => 'web']);
+        $admin->assignRole($adminRole);
+        Sanctum::actingAs($admin);
 
         $response = $this->postJson('/api/v1/inventory/warehouses', [
             'name' => 'Main Warehouse',
@@ -33,10 +51,14 @@ class InventoryTest extends TestCase
         $fetchResponse->assertStatus(200)->assertJsonCount(1, 'data');
     }
 
-    public function test_can_create_supplier(): void
+    public function test_staff_with_permission_can_create_supplier(): void
     {
-        $user = User::factory()->create();
-        Sanctum::actingAs($user);
+        $staff = User::factory()->create();
+        $managerRole = Role::create(['name' => 'inventory_manager', 'display_name' => 'Inventory Manager', 'guard_name' => 'web']);
+        $perm = Permission::create(['name' => 'manage-inventory', 'display_name' => 'Manage Inventory', 'group' => 'inventory', 'guard_name' => 'web']);
+        $managerRole->permissions()->attach($perm->id);
+        $staff->assignRole($managerRole);
+        Sanctum::actingAs($staff);
 
         $response = $this->postJson('/api/v1/inventory/suppliers', [
             'name' => 'Tech Wholesale Inc',

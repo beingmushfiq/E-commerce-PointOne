@@ -13,7 +13,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->alias([
+            'permission'      => \App\Http\Middleware\CheckPermission::class,
+            'role'            => \App\Http\Middleware\RequireRole::class,
+            'tenant'          => \App\Http\Middleware\ResolveTenant::class,
+            'tenant.active'   => \App\Http\Middleware\EnsureTenantIsActive::class,
+            'tenant.required' => \App\Http\Middleware\RequireTenantContext::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

@@ -3,6 +3,7 @@
 namespace Tests\Feature\Api;
 
 use App\Models\User;
+use App\Models\Role;
 use App\Models\Order;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
@@ -12,13 +13,38 @@ class AdminDashboardTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_can_fetch_admin_analytics(): void
+    public function test_customer_cannot_access_admin_analytics_without_permission(): void
     {
-        $user = User::factory()->create();
-        Sanctum::actingAs($user);
+        // Unprivileged customer user
+        $customer = User::factory()->create();
+        Sanctum::actingAs($customer);
+
+        $response = $this->getJson('/api/v1/admin/analytics');
+
+        // SEC-01 Remediation Verification: Must be Forbidden (403)
+        $response->assertStatus(403)
+            ->assertJsonPath('status', 'error');
+    }
+
+    public function test_customer_cannot_access_system_health(): void
+    {
+        $customer = User::factory()->create();
+        Sanctum::actingAs($customer);
+
+        $response = $this->getJson('/api/v1/admin/health');
+
+        $response->assertStatus(403);
+    }
+
+    public function test_admin_can_fetch_admin_analytics(): void
+    {
+        $admin = User::factory()->create();
+        $adminRole = Role::create(['name' => 'admin', 'display_name' => 'Admin', 'guard_name' => 'web']);
+        $admin->assignRole($adminRole);
+        Sanctum::actingAs($admin);
 
         Order::create([
-            'user_id' => $user->id,
+            'user_id' => $admin->id,
             'order_number' => 'ORD-12345',
             'status' => 'delivered',
             'payment_status' => 'paid',
@@ -35,10 +61,12 @@ class AdminDashboardTest extends TestCase
             ->assertJsonPath('data.kpi.total_orders', 1);
     }
 
-    public function test_can_fetch_system_health(): void
+    public function test_admin_can_fetch_system_health(): void
     {
-        $user = User::factory()->create();
-        Sanctum::actingAs($user);
+        $admin = User::factory()->create();
+        $adminRole = Role::create(['name' => 'admin', 'display_name' => 'Admin', 'guard_name' => 'web']);
+        $admin->assignRole($adminRole);
+        Sanctum::actingAs($admin);
 
         $response = $this->getJson('/api/v1/admin/health');
 
