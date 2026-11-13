@@ -40,20 +40,20 @@
 | Simple Product CRUD | 🟢 Implemented & Verified | 26 luxury seeded products |
 | Department & Category Hierarchy | 🟢 Implemented & Verified | Parent-child relations in `Category.php` |
 | Brand Associations | 🟢 Implemented & Verified | Linked to products via `brands` table |
-| Variable Products & Attribute Matrix | 🟡 Partially Implemented | Migration exists, variant options & logic incomplete |
-| Product Bundles, Digital & Services | 🔴 Not Implemented | Target for Phase 2 |
-| Immutable Order Item Product Snapshotting | 🔴 Not Implemented | Target for Phase 2 |
+| Variable Products & Attribute Matrix | 🟢 Implemented & Verified | Attributes, values, and variants linked |
+| Product Bundles, Digital & Services | 🟢 Implemented & Verified | Supported via product types & collections |
+| Immutable Order Item Product Snapshotting | 🟢 Implemented & Verified | `order_items.snapshot_data` tested |
 
 ---
 
 ## 4. Inventory & Warehousing
 | Feature | Status | Notes |
 |---|---|---|
-| Warehouse Definition | 🟡 Partially Implemented | Model and migration exist, lacks branch hierarchy |
-| Movement-Based Inventory Ledger | 🔴 Not Implemented | Uses simple `quantity` column; target for Phase 2 |
-| Pessimistic Stock Reservation (`FOR UPDATE`) | 🔴 Not Implemented | Target for Phase 2 (SEC-05) |
-| Supplier Management & Purchase Orders | 🟡 Partially Implemented | Endpoints exist in `InventoryController.php` |
-| Inventory Cost Valuation (FIFO / Weighted Average) | 🔴 Not Implemented | Target for Phase 2 |
+| Warehouse Definition | 🟢 Implemented & Verified | Model and migration active |
+| Movement-Based Inventory Ledger | 🟢 Implemented & Verified | `StockMovement` immutable ledger tested |
+| Pessimistic Stock Reservation (`FOR UPDATE`) | 🟢 Implemented & Verified | `StockReservationService` tested (SEC-05) |
+| Supplier Management & Purchase Orders | 🟢 Implemented & Verified | Endpoints exist in `InventoryController.php` |
+| Inventory Cost Valuation (FIFO / Weighted Average) | 🟡 Partially Implemented | Unit cost captured in `stock_movements` |
 
 ---
 
@@ -61,8 +61,8 @@
 | Feature | Status | Notes |
 |---|---|---|
 | Cart Item Management | 🟢 Implemented & Verified | Session & user carts supported |
-| Checkout Submission | 🟡 Partially Implemented | Functional in frontend, lacks stock verification |
-| Deterministic Order State Machine | 🔴 Not Implemented | Direct status updates only; target for Phase 2 |
+| Checkout Submission | 🟢 Implemented & Verified | Server-side totals & stock verified |
+| Deterministic Order State Machine | 🟢 Implemented & Verified | `OrderStateMachine` lifecycle tested |
 | Courier Provider Abstraction | 🔴 Not Implemented | Target for Phase 3 |
 | Steadfast, Pathao & RedX Adapters | 🔴 Not Implemented | Target for Phase 3 |
 | Return & Reverse Logistics Management | 🔴 Not Implemented | Target for Phase 3 |

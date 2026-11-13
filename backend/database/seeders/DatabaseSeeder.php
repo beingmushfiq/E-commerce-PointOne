@@ -21,8 +21,14 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Truncate existing data cleanly
-        DB::statement('PRAGMA foreign_keys = OFF;');
+        // Truncate existing data cleanly with driver compatibility
+        $driver = DB::connection()->getDriverName();
+        if ($driver === 'sqlite') {
+            DB::statement('PRAGMA foreign_keys = OFF;');
+        } elseif ($driver === 'mysql') {
+            DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        }
+
         DB::table('model_has_roles')->truncate();
         DB::table('role_has_permissions')->truncate();
         User::truncate();
@@ -35,7 +41,12 @@ class DatabaseSeeder extends Seeder
         Menu::truncate();
         Faq::truncate();
         BlogPost::truncate();
-        DB::statement('PRAGMA foreign_keys = ON;');
+
+        if ($driver === 'sqlite') {
+            DB::statement('PRAGMA foreign_keys = ON;');
+        } elseif ($driver === 'mysql') {
+            DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        }
 
         // 1. Roles & Permissions Setup
         $adminRole = Role::create(['name' => 'admin', 'display_name' => 'Administrator', 'guard_name' => 'web']);

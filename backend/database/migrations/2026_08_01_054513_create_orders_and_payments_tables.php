@@ -34,7 +34,12 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->string('order_number')->unique();
-            $table->enum('status', ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'])->default('pending');
+            $table->enum('status', [
+                'draft', 'pending', 'awaiting_payment', 'confirmed', 'processing',
+                'partially_fulfilled', 'ready_for_shipment', 'shipped', 'partially_delivered',
+                'delivered', 'completed', 'return_requested', 'returned', 'partially_refunded',
+                'refunded', 'cancelled', 'failed'
+            ])->default('pending');
             $table->enum('payment_status', ['unpaid', 'paid', 'partially_refunded', 'refunded'])->default('unpaid');
             $table->string('payment_method')->default('cod'); // stripe, paypal, sslcommerz, bkash, nagad, rocket, cod, wallet
             $table->decimal('subtotal', 12, 2);

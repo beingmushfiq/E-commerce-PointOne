@@ -16,8 +16,8 @@ This register catalogs existing architectural shortcuts, anti-patterns, and tech
 
 ### TD-02: SQLite-Only Database Seeder
 - **Location:** `backend/database/seeders/DatabaseSeeder.php`
-- **Issue:** Contains `DB::statement('PRAGMA foreign_keys = OFF;');` which causes immediate syntax errors when executing against MySQL in staging/production environments.
-- **Refactoring Strategy:** Detect the active database driver via `DB::connection()->getDriverName()` and use `SET FOREIGN_KEY_CHECKS=0;` for MySQL or `PRAGMA foreign_keys = OFF;` for SQLite.
+- **Issue:** Contained `DB::statement('PRAGMA foreign_keys = OFF;');` which causes immediate syntax errors when executing against MySQL in staging/production environments.
+- **Status:** **RESOLVED (Phase 2):** Added runtime driver detection dynamically switching between `SET FOREIGN_KEY_CHECKS=0` (MySQL) and `PRAGMA foreign_keys = OFF` (SQLite).
 
 ### TD-03: Floating-Point Financial Arithmetic
 - **Location:** `backend/app/Http/Controllers/Api/V1/CheckoutController.php`, `MarketingController.php`
@@ -27,14 +27,13 @@ This register catalogs existing architectural shortcuts, anti-patterns, and tech
 
 ### TD-04: Rigid RBAC Trait Evaluation
 - **Location:** `backend/app/Traits/HasRoles.php`
-- **Issue:** `$this->roles->contains('name', $role)` evaluates only the in-memory loaded Eloquent collection. If the relation is not eager-loaded, it can produce silent false negatives.
-- **Refactoring Strategy:** Replace with robust database-backed role/permission checks and integrate Laravel Policies.
+- **Issue:** `$this->roles->contains('name', $role)` evaluates only the in-memory loaded Eloquent collection.
+- **Status:** **RESOLVED (Phase 1):** Updated `HasRoles` trait to fallback cleanly to database queries when relation is not loaded.
 
 ### TD-05: Missing Order Lifecycle Snapshotting
 - **Location:** `backend/app/Http/Controllers/Api/V1/CheckoutController.php`
-- **Issue:** Orders link directly to products without capturing immutable historical snapshots of product name, SKU, tax rate, and shipping properties at the instant of purchase.
-- **Consequence:** If a product is edited or renamed later, previous order records inadvertently reflect the updated attributes.
-- **Refactoring Strategy:** Store immutable JSON snapshot payloads on each `order_items` record.
+- **Issue:** Orders previously linked directly to products without capturing immutable historical snapshots of product name, SKU, tax rate, and shipping properties at the instant of purchase.
+- **Status:** **RESOLVED (Phase 2):** Order items now store immutable JSON `snapshot_data` containing historical product specifications, prices, and images. Verified via `CheckoutSnapshotTest.php`.
 
 ### TD-06: Hardcoded cPanel & Environment Assumptions
 - **Location:** `backend/config/`

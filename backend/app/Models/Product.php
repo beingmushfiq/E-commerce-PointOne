@@ -14,14 +14,30 @@ class Product extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'category_id', 'brand_id', 'name', 'slug', 'sku', 'type', 'summary',
-        'description', 'price', 'sale_price', 'cost_price', 'quantity',
-        'is_active', 'is_featured', 'has_variants', 'meta_title', 'meta_description'
+        'category_id',
+        'brand_id',
+        'name',
+        'slug',
+        'sku',
+        'type',
+        'summary',
+        'description',
+        'price',
+        'sale_price',
+        'cost_price',
+        'quantity',
+        'is_active',
+        'is_featured',
+        'has_variants',
+        'meta_title',
+        'meta_description',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
         'sale_price' => 'decimal:2',
+        'cost_price' => 'decimal:2',
+        'quantity' => 'integer',
         'is_active' => 'boolean',
         'is_featured' => 'boolean',
         'has_variants' => 'boolean',
@@ -50,5 +66,22 @@ class Product extends Model
     public function reviews(): HasMany
     {
         return $this->hasMany(ProductReview::class);
+    }
+
+    public function stocks(): HasMany
+    {
+        return $this->hasMany(Stock::class);
+    }
+
+    public function stockMovements(): HasMany
+    {
+        return $this->hasMany(StockMovement::class);
+    }
+
+    public function collections(): BelongsToMany
+    {
+        return $this->belongsToMany(ProductCollection::class, 'product_collection_items')
+            ->withPivot('sort_order')
+            ->orderByPivot('sort_order', 'asc');
     }
 }

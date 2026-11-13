@@ -12,9 +12,19 @@ class Order extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'order_number', 'status', 'payment_status', 'payment_method',
-        'subtotal', 'discount_amount', 'tax_amount', 'shipping_cost', 'grand_total',
-        'shipping_address', 'billing_address', 'notes'
+        'user_id',
+        'order_number',
+        'status',
+        'payment_status',
+        'payment_method',
+        'subtotal',
+        'discount_amount',
+        'tax_amount',
+        'shipping_cost',
+        'grand_total',
+        'shipping_address',
+        'billing_address',
+        'notes',
     ];
 
     protected $casts = [
@@ -40,6 +50,11 @@ class Order extends Model
     public function histories(): HasMany
     {
         return $this->hasMany(OrderHistory::class);
+    }
+
+    public function transitions(): HasMany
+    {
+        return $this->hasMany(OrderStateTransition::class);
     }
 
     public function payments(): HasMany
