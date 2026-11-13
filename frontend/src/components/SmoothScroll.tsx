@@ -48,3 +48,4 @@ export const SmoothScroll: React.FC<{ children: React.ReactNode }> = ({ children
 
   return <div className="smooth-scroll-wrapper">{children}</div>;
 };
+

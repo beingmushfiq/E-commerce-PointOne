@@ -88,3 +88,4 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode; initialTheme?:
 };
 
 export const useTheme = () => useContext(ThemeContext);
+

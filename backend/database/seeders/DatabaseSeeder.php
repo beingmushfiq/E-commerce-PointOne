@@ -65,13 +65,29 @@ class DatabaseSeeder extends Seeder
             $adminRole->permissions()->attach($perm->id);
         }
 
-        // Default Admin User
+        // Default Platform Superadmin User
+        $superadmin = User::create([
+            'name' => 'Platform Superadmin',
+            'email' => 'superadmin@centerpoint.com',
+            'password' => Hash::make('password123'),
+        ]);
+        $superadmin->assignRole($adminRole);
+
+        // Default Store Admin User
         $admin = User::create([
+            'name' => 'Store Administrator',
+            'email' => 'admin@centerpoint.com',
+            'password' => Hash::make('password123'),
+        ]);
+        $admin->assignRole($adminRole);
+
+        // Legacy Admin User
+        $legacyAdmin = User::create([
             'name' => 'System Admin',
             'email' => 'admin@gmail.com',
             'password' => Hash::make('12345678'),
         ]);
-        $admin->assignRole($adminRole);
+        $legacyAdmin->assignRole($adminRole);
 
         // Default Customer User
         $customer = User::create([

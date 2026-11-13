@@ -72,3 +72,4 @@ class StorefrontCustomizerTest extends TestCase
         $this->assertEquals('BDT', StorefrontSetting::where('key', 'default_currency')->first()->value);
     }
 }
+

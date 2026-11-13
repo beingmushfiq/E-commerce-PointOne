@@ -7,7 +7,7 @@ export const McpLogin: React.FC<{ onLoginSuccess: (token: string, user: any) => 
   onLoginSuccess,
   onBackToStore,
 }) => {
-  const [email, setEmail] = useState('admin@centerpoint.com');
+  const [email, setEmail] = useState('superadmin@centerpoint.com');
   const [password, setPassword] = useState('password123');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -106,12 +106,17 @@ export const McpLogin: React.FC<{ onLoginSuccess: (token: string, user: any) => 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold rounded-xl text-xs tracking-wider uppercase transition duration-200 flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 disabled:opacity-50"
+              className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold rounded-xl text-xs tracking-wider uppercase transition duration-200 flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 disabled:opacity-50 cursor-pointer"
             >
               {loading ? 'Authenticating Deck...' : 'Unlock Master Control Panel'}
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>
+
+          <div className="pt-2 p-3 bg-zinc-950/60 border border-zinc-800 rounded-xl text-center text-[11px] text-zinc-400 font-mono space-y-1">
+            <span className="text-amber-500/90 font-semibold block">Demo Superadmin Access:</span>
+            <span>superadmin@centerpoint.com &bull; password123</span>
+          </div>
 
           <div className="pt-2 text-center text-[10px] text-zinc-500 font-mono">
             <span>Isolated Security Protocol · Guard: Platform · Zero Mock Ops</span>
@@ -137,3 +142,4 @@ export const McpLogin: React.FC<{ onLoginSuccess: (token: string, user: any) => 
     </div>
   );
 };
+

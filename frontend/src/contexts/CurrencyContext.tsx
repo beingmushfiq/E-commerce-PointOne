@@ -94,3 +94,4 @@ export const CurrencyProvider: React.FC<{
 };
 
 export const useCurrency = () => useContext(CurrencyContext);
+

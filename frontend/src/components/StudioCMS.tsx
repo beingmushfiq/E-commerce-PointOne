@@ -101,7 +101,7 @@ export const StudioCMS: React.FC<StudioCMSProps> = ({
           </form>
 
           <div className="pt-4 border-t border-zinc-800/80 flex items-center justify-between text-xs text-zinc-500">
-            <span>Demo Admin: admin@centerpoint.com</span>
+            <span>Demo Admin: admin@centerpoint.com &bull; password123</span>
             <button onClick={onOpenStorefront} className="text-amber-400 hover:underline">
               Back to Store
             </button>

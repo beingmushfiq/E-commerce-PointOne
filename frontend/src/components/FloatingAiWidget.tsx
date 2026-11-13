@@ -243,3 +243,4 @@ export const FloatingAiWidget: React.FC<{ onAddToCart?: (product: ProductItem) =
     </>
   );
 };
+
