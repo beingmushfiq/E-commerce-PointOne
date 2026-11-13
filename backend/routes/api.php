@@ -124,9 +124,11 @@ Route::prefix('v1')->group(function () {
             Route::get('/admin/orders/{id}', [AdminOrderController::class, 'show']);
             Route::put('/admin/orders/{id}/status', [AdminOrderController::class, 'updateStatus']);
 
+            Route::get('/admin/sliders', [AdminCmsContentController::class, 'sliders']);
             Route::post('/admin/sliders', [AdminCmsContentController::class, 'storeSlider']);
             Route::put('/admin/sliders/{id}', [AdminCmsContentController::class, 'updateSlider']);
             Route::delete('/admin/sliders/{id}', [AdminCmsContentController::class, 'destroySlider']);
+            Route::get('/admin/faqs', [AdminCmsContentController::class, 'faqs']);
             Route::post('/admin/faqs', [AdminCmsContentController::class, 'storeFaq']);
             Route::put('/admin/faqs/{id}', [AdminCmsContentController::class, 'updateFaq']);
             Route::delete('/admin/faqs/{id}', [AdminCmsContentController::class, 'destroyFaq']);

@@ -11,6 +11,17 @@ use Illuminate\Http\JsonResponse;
 class AdminCmsContentController extends Controller
 {
     /**
+     * List all sliders for administration.
+     */
+    public function sliders(): JsonResponse
+    {
+        return response()->json([
+            'status' => 'success',
+            'data'   => Slider::orderBy('sort_order')->get(),
+        ]);
+    }
+
+    /**
      * Store a new hero slider.
      */
     public function storeSlider(Request $request): JsonResponse
@@ -79,6 +90,17 @@ class AdminCmsContentController extends Controller
         return response()->json([
             'status'  => 'success',
             'message' => 'Slider removed successfully',
+        ]);
+    }
+
+    /**
+     * List all FAQs for administration.
+     */
+    public function faqs(): JsonResponse
+    {
+        return response()->json([
+            'status' => 'success',
+            'data'   => Faq::orderBy('sort_order')->get(),
         ]);
     }
 

@@ -152,11 +152,21 @@ export const StudioCMS: React.FC<StudioCMSProps> = ({
   const fetchSlidersAndFaqs = async () => {
     try {
       const [sRes, fRes] = await Promise.all([
-        api.get('/cms/sliders'),
-        api.get('/cms/faqs'),
+        api.get('/admin/sliders').catch(() => api.get('/cms/sliders')),
+        api.get('/admin/faqs').catch(() => api.get('/cms/faqs')),
       ]);
-      setSliders(sRes.data?.data || []);
-      setFaqs(fRes.data?.data || []);
+
+      const sData = sRes.data?.data;
+      setSliders(Array.isArray(sData) ? sData : []);
+
+      const fData = fRes.data?.data;
+      let flatFaqs: any[] = [];
+      if (Array.isArray(fData)) {
+        flatFaqs = fData;
+      } else if (fData && typeof fData === 'object') {
+        flatFaqs = Object.values(fData).flat();
+      }
+      setFaqs(flatFaqs);
     } catch {}
   };
 
@@ -328,7 +338,7 @@ export const StudioCMS: React.FC<StudioCMSProps> = ({
     try {
       const res = await api.post('/admin/sliders', newSliderForm);
       if (res.data?.data) {
-        setSliders([...sliders, res.data.data]);
+        setSliders((prev) => [...(Array.isArray(prev) ? prev : []), res.data.data]);
       }
       queryClient.invalidateQueries({ queryKey: ['sliders'] });
       setIsAddSliderOpen(false);
@@ -349,7 +359,7 @@ export const StudioCMS: React.FC<StudioCMSProps> = ({
     if (!confirm('Remove this hero slide?')) return;
     try {
       await api.delete(`/admin/sliders/${id}`);
-      setSliders(sliders.filter((s) => s.id !== id));
+      setSliders((prev) => (Array.isArray(prev) ? prev.filter((s) => s.id !== id) : []));
       queryClient.invalidateQueries({ queryKey: ['sliders'] });
       showFeedback('Slide removed');
     } catch {
@@ -362,8 +372,9 @@ export const StudioCMS: React.FC<StudioCMSProps> = ({
     try {
       const res = await api.post('/admin/faqs', newFaqForm);
       if (res.data?.data) {
-        setFaqs([...faqs, res.data.data]);
+        setFaqs((prev) => [...(Array.isArray(prev) ? prev : []), res.data.data]);
       }
+      queryClient.invalidateQueries({ queryKey: ['faqs'] });
       setIsAddFaqOpen(false);
       setNewFaqForm({ question: '', answer: '', category: 'General' });
       showFeedback('FAQ entry published');
@@ -376,7 +387,8 @@ export const StudioCMS: React.FC<StudioCMSProps> = ({
     if (!confirm('Remove this FAQ item?')) return;
     try {
       await api.delete(`/admin/faqs/${id}`);
-      setFaqs(faqs.filter((f) => f.id !== id));
+      setFaqs((prev) => (Array.isArray(prev) ? prev.filter((f) => f.id !== id) : []));
+      queryClient.invalidateQueries({ queryKey: ['faqs'] });
       showFeedback('FAQ removed');
     } catch {
       alert('Failed to delete FAQ');
@@ -929,26 +941,32 @@ export const StudioCMS: React.FC<StudioCMSProps> = ({
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {sliders.map((slide) => (
-                    <div key={slide.id} className="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl space-y-2 flex flex-col justify-between">
-                      <div>
-                        <div className="aspect-video w-full rounded-lg overflow-hidden bg-zinc-200 dark:bg-zinc-800 mb-2">
-                          <img src={slide.image} alt="" className="w-full h-full object-cover" />
+                  {(Array.isArray(sliders) ? sliders : []).length > 0 ? (
+                    (Array.isArray(sliders) ? sliders : []).map((slide) => (
+                      <div key={slide.id} className="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl space-y-2 flex flex-col justify-between">
+                        <div>
+                          <div className="aspect-video w-full rounded-lg overflow-hidden bg-zinc-200 dark:bg-zinc-800 mb-2">
+                            <img src={slide.image} alt="" className="w-full h-full object-cover" />
+                          </div>
+                          <h4 className="font-bold text-sm text-zinc-900 dark:text-white font-serif">{slide.title}</h4>
+                          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">{slide.subtitle}</p>
                         </div>
-                        <h4 className="font-bold text-sm text-zinc-900 dark:text-white font-serif">{slide.title}</h4>
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">{slide.subtitle}</p>
+                        <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-xs">
+                          <span className="text-[10px] font-mono text-amber-500 font-semibold">Active Slide</span>
+                          <button
+                            onClick={() => handleDeleteSlider(slide.id)}
+                            className="text-rose-500 hover:underline flex items-center gap-1 cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" /> Remove
+                          </button>
+                        </div>
                       </div>
-                      <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-xs">
-                        <span className="text-[10px] font-mono text-amber-500 font-semibold">Active Slide</span>
-                        <button
-                          onClick={() => handleDeleteSlider(slide.id)}
-                          className="text-rose-500 hover:underline flex items-center gap-1 cursor-pointer"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" /> Remove
-                        </button>
-                      </div>
+                    ))
+                  ) : (
+                    <div className="col-span-2 py-8 text-center text-xs text-zinc-400">
+                      No active hero slides. Click "Add Slide" to publish one.
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
 
@@ -968,21 +986,30 @@ export const StudioCMS: React.FC<StudioCMSProps> = ({
                 </div>
 
                 <div className="space-y-3">
-                  {faqs.map((faq) => (
-                    <div key={faq.id} className="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl flex items-start justify-between gap-4">
-                      <div>
-                        <div className="font-bold text-zinc-900 dark:text-white text-xs font-serif">{faq.question}</div>
-                        <div className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">{faq.answer}</div>
+                  {(Array.isArray(faqs) ? faqs : []).length > 0 ? (
+                    (Array.isArray(faqs) ? faqs : []).map((faq) => (
+                      <div key={faq.id} className="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl flex items-start justify-between gap-4">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-zinc-900 dark:text-white text-xs font-serif">{faq.question}</span>
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500">{faq.category || 'General'}</span>
+                          </div>
+                          <div className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">{faq.answer}</div>
+                        </div>
+                        <button
+                          onClick={() => handleDeleteFaq(faq.id)}
+                          className="p-1.5 text-zinc-400 hover:text-rose-500 rounded transition cursor-pointer shrink-0"
+                          title="Delete FAQ"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
-                      <button
-                        onClick={() => handleDeleteFaq(faq.id)}
-                        className="p-1.5 text-zinc-400 hover:text-rose-500 rounded transition cursor-pointer shrink-0"
-                        title="Delete FAQ"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                    ))
+                  ) : (
+                    <div className="py-8 text-center text-xs text-zinc-400">
+                      No FAQs published yet. Click "Add FAQ" to create one.
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             </div>
