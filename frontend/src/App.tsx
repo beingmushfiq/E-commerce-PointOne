@@ -69,7 +69,14 @@ function StorefrontContent() {
 
   useEffect(() => {
     api.get('/storefront/config').then(res => {
-      setStoreConfig(res.data?.data);
+      const data = res.data?.data;
+      setStoreConfig(data);
+      if (data?.theme?.accent_color && typeof document !== 'undefined') {
+        document.documentElement.style.setProperty('--accent-gold', data.theme.accent_color);
+      }
+      if (data?.theme?.glass_blur && typeof document !== 'undefined') {
+        document.documentElement.style.setProperty('--glass-blur', data.theme.glass_blur);
+      }
     }).catch(() => {});
 
     // Listen for hash navigation e.g. #mcp-login

@@ -18,6 +18,9 @@ use App\Http\Controllers\Api\V1\Platform\PlanManagementController;
 use App\Http\Controllers\Api\V1\Platform\StorefrontCustomizerController;
 use App\Http\Controllers\Api\V1\AiAssistantController;
 use App\Http\Controllers\Api\V1\SeoController;
+use App\Http\Controllers\Api\V1\Admin\AdminCatalogController;
+use App\Http\Controllers\Api\V1\Admin\AdminOrderController;
+use App\Http\Controllers\Api\V1\Admin\AdminCmsContentController;
 
 Route::prefix('v1')->group(function () {
     // Public Storefront Configuration & Theming
@@ -108,6 +111,25 @@ Route::prefix('v1')->group(function () {
             Route::get('/admin/analytics', [AdminDashboardController::class, 'analytics']);
             Route::get('/admin/logs', [AdminDashboardController::class, 'logs']);
             Route::get('/admin/health', [AdminDashboardController::class, 'health']);
+
+            // Admin Operations for Products, Categories, Orders, Sliders, FAQs
+            Route::post('/admin/products', [AdminCatalogController::class, 'storeProduct']);
+            Route::put('/admin/products/{id}', [AdminCatalogController::class, 'updateProduct']);
+            Route::delete('/admin/products/{id}', [AdminCatalogController::class, 'destroyProduct']);
+            Route::post('/admin/categories', [AdminCatalogController::class, 'storeCategory']);
+            Route::put('/admin/categories/{id}', [AdminCatalogController::class, 'updateCategory']);
+            Route::delete('/admin/categories/{id}', [AdminCatalogController::class, 'destroyCategory']);
+
+            Route::get('/admin/orders', [AdminOrderController::class, 'index']);
+            Route::get('/admin/orders/{id}', [AdminOrderController::class, 'show']);
+            Route::put('/admin/orders/{id}/status', [AdminOrderController::class, 'updateStatus']);
+
+            Route::post('/admin/sliders', [AdminCmsContentController::class, 'storeSlider']);
+            Route::put('/admin/sliders/{id}', [AdminCmsContentController::class, 'updateSlider']);
+            Route::delete('/admin/sliders/{id}', [AdminCmsContentController::class, 'destroySlider']);
+            Route::post('/admin/faqs', [AdminCmsContentController::class, 'storeFaq']);
+            Route::put('/admin/faqs/{id}', [AdminCmsContentController::class, 'updateFaq']);
+            Route::delete('/admin/faqs/{id}', [AdminCmsContentController::class, 'destroyFaq']);
         });
 
         // Financial & Double-Entry Accounting (Restricted to Staff with manage-finance permission or Admin)

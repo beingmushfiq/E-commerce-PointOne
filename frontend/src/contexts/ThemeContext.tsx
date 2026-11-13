@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect, useState, useTransition } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { flushSync } from 'react-dom';
 
 type ThemeMode = 'light' | 'dark';
 
@@ -20,28 +21,42 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode; initialTheme?:
 }) => {
   const [theme, setThemeState] = useState<ThemeMode>(() => {
     const saved = localStorage.getItem('centerpoint_theme') as ThemeMode;
-    return saved === 'dark' || saved === 'light' ? saved : initialTheme;
+    const resolved = saved === 'dark' || saved === 'light' ? saved : initialTheme;
+    if (typeof document !== 'undefined') {
+      const root = document.documentElement;
+      if (resolved === 'dark') {
+        root.classList.add('dark');
+        root.style.colorScheme = 'dark';
+      } else {
+        root.classList.remove('dark');
+        root.style.colorScheme = 'light';
+      }
+    }
+    return resolved;
   });
 
-  const [, startTransition] = useTransition();
-
-  useEffect(() => {
+  const applyThemeToDOM = (newTheme: ThemeMode) => {
     const root = document.documentElement;
-    if (theme === 'dark') {
+    if (newTheme === 'dark') {
       root.classList.add('dark');
       root.style.colorScheme = 'dark';
     } else {
       root.classList.remove('dark');
       root.style.colorScheme = 'light';
     }
-    localStorage.setItem('centerpoint_theme', theme);
+    localStorage.setItem('centerpoint_theme', newTheme);
+  };
+
+  useEffect(() => {
+    applyThemeToDOM(theme);
   }, [theme]);
 
   const toggleTheme = (e?: React.MouseEvent) => {
     const nextTheme: ThemeMode = theme === 'light' ? 'dark' : 'light';
 
-    // If browser supports View Transitions API, execute circular reveal from click coordinates
+    // If View Transitions API is not available or click event coordinates are missing
     if (!document.startViewTransition || !e) {
+      applyThemeToDOM(nextTheme);
       setThemeState(nextTheme);
       return;
     }
@@ -53,30 +68,40 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode; initialTheme?:
       Math.max(y, window.innerHeight - y)
     );
 
-    const transition = document.startViewTransition(() => {
-      startTransition(() => {
+    try {
+      const transition = document.startViewTransition(() => {
+        flushSync(() => {
+          applyThemeToDOM(nextTheme);
+          setThemeState(nextTheme);
+        });
+      });
+
+      transition.ready.then(() => {
+        document.documentElement.animate(
+          {
+            clipPath: [
+              `circle(0px at ${x}px ${y}px)`,
+              `circle(${endRadius}px at ${x}px ${y}px)`,
+            ],
+          },
+          {
+            duration: 500,
+            easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+            pseudoElement: '::view-transition-new(root)',
+          }
+        );
+      }).catch(() => {
+        applyThemeToDOM(nextTheme);
         setThemeState(nextTheme);
       });
-    });
-
-    transition.ready.then(() => {
-      document.documentElement.animate(
-        {
-          clipPath: [
-            `circle(0px at ${x}px ${y}px)`,
-            `circle(${endRadius}px at ${x}px ${y}px)`,
-          ],
-        },
-        {
-          duration: 550,
-          easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
-          pseudoElement: '::view-transition-new(root)',
-        }
-      );
-    });
+    } catch {
+      applyThemeToDOM(nextTheme);
+      setThemeState(nextTheme);
+    }
   };
 
   const setTheme = (newTheme: ThemeMode) => {
+    applyThemeToDOM(newTheme);
     setThemeState(newTheme);
   };
 
@@ -88,4 +113,3 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode; initialTheme?:
 };
 
 export const useTheme = () => useContext(ThemeContext);
-
