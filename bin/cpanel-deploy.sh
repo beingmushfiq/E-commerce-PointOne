@@ -110,11 +110,17 @@ fi
 # ------------------------------------------------------------------------------
 echo -e "\n${YELLOW}→ [3/8] Validating Production Environment (.env)...${NC}"
 cd "${BACKEND_DIR}"
-if [ ! -f ".env" ]; then
-    if [ -f ".env.production" ]; then
-        echo "  • Initializing production environment from .env.production..."
+
+if [ -f ".env.production" ]; then
+    if [ ! -f ".env" ] || [[ "${*:-}" == *"--sync-env"* ]]; then
+        echo "  • Synchronizing active environment from .env.production..."
         cp .env.production .env
-    elif [ -f ".env.example" ]; then
+    elif grep -q "DB_USERNAME=cp_master" .env 2>/dev/null; then
+        echo "  • Upgrading .env database credentials to cPanel prefixed user (devcente_)..."
+        cp .env.production .env
+    fi
+elif [ ! -f ".env" ]; then
+    if [ -f ".env.example" ]; then
         echo "  • Creating .env from .env.example..."
         cp .env.example .env
         "${PHP_BIN}" artisan key:generate --force
@@ -128,6 +134,10 @@ fi
 if ! grep -q "CPANEL_MODE=" .env; then
     echo "CPANEL_MODE=true" >> .env
 fi
+
+# Clear any cached bootstrap config so fresh .env values are always loaded
+rm -f bootstrap/cache/config.php bootstrap/cache/routes-*.php bootstrap/cache/events.php 2>/dev/null || true
+"${PHP_BIN}" artisan config:clear --quiet 2>/dev/null || true
 
 # ------------------------------------------------------------------------------
 # 5. BACKEND DEPENDENCIES & COMPOSER
