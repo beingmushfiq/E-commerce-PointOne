@@ -157,9 +157,9 @@ fi
 echo -e "  • Dependencies:  ${GREEN}Optimized (Production Classmap)${NC}"
 
 # ------------------------------------------------------------------------------
-# 6. DATABASE MIGRATIONS
+# 6. DATABASE MIGRATIONS & PRODUCTION SEEDING
 # ------------------------------------------------------------------------------
-echo -e "\n${YELLOW}→ [5/8] Running Database Migrations...${NC}"
+echo -e "\n${YELLOW}→ [5/8] Running Database Migrations & Production Seeding...${NC}"
 cd "${BACKEND_DIR}"
 
 if [[ "${*:-}" == *"--fresh-db"* ]]; then
@@ -168,14 +168,12 @@ if [[ "${*:-}" == *"--fresh-db"* ]]; then
     "${PHP_BIN}" artisan db:seed --force
 else
     "${PHP_BIN}" artisan migrate --force
-    # Automatically seed initial administrative accounts if users table is empty
-    USER_COUNT=$("${PHP_BIN}" artisan tinker --execute="echo \App\Models\User::count();" 2>/dev/null || echo "0")
-    if [ "${USER_COUNT}" = "0" ]; then
-        echo "  • Seeding initial administrative accounts and catalog defaults..."
-        "${PHP_BIN}" artisan db:seed --force
-    fi
+    echo -e "  • Migrations:    ${GREEN}All Schemas Up to Date${NC}"
+    
+    echo "  • Running Production Database Seeder..."
+    "${PHP_BIN}" artisan db:seed --class="Database\\Seeders\\ProductionSeeder" --force
+    echo -e "  • Seeds:         ${GREEN}Administrative Users, Roles & Ledger Verified${NC}"
 fi
-echo -e "  • Migrations:    ${GREEN}All Schemas Up to Date${NC}"
 
 # ------------------------------------------------------------------------------
 # 7. FRONTEND PRODUCTION BUILD & DISTRIBUTION
