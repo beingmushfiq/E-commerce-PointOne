@@ -200,6 +200,8 @@ fi
 
 # SPA Apache .htaccess Template (Required for client-side React Router on cPanel)
 cat << 'EOF' > /tmp/cp_spa_htaccess
+DirectoryIndex index.html index.php
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteBase /
@@ -225,6 +227,11 @@ for sub in "${SUBDOMAINS[@]}"; do
     cp /tmp/cp_spa_htaccess "${SUB_ROOT}/.htaccess"
 done
 rm -f /tmp/cp_spa_htaccess
+
+# Enforce secure web-accessible permissions (755 directories, 644 files)
+chmod 755 "${PROJECT_ROOT}" "${WEBROOTS_DIR}" "${BACKEND_DIR}/public" 2>/dev/null || true
+chmod -R 755 "${WEBROOTS_DIR}" 2>/dev/null || true
+find "${WEBROOTS_DIR}" -type f -exec chmod 644 {} + 2>/dev/null || true
 echo -e "  • Subdomains:    ${GREEN}6 Target Webroots Synchronized in ${WEBROOTS_DIR}${NC}"
 echo -e "  • API Gateway:   ${GREEN}Direct native execution from ${BACKEND_DIR}/public${NC}"
 
