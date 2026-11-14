@@ -187,8 +187,14 @@ if [[ "${*:-}" != *"--skip-build"* ]]; then
     fi
 fi
 
-if [ ! -d "${FRONTEND_DIR}/dist" ]; then
-    echo -e "${RED}ERROR: frontend/dist directory does not exist! Please pre-build locally or install Node.js on server.${NC}"
+# Locate pre-compiled production bundle (checks frontend/dist or root dist/)
+DIST_DIR="${FRONTEND_DIR}/dist"
+if [ ! -d "${DIST_DIR}" ] && [ -d "${PROJECT_ROOT}/dist" ]; then
+    DIST_DIR="${PROJECT_ROOT}/dist"
+fi
+
+if [ ! -d "${DIST_DIR}" ]; then
+    echo -e "${RED}ERROR: Pre-compiled dist/ directory does not exist! Please pre-build locally.${NC}"
     exit 1
 fi
 
@@ -212,8 +218,8 @@ for sub in "${SUBDOMAINS[@]}"; do
     SUB_ROOT="${WEBROOTS_DIR}/${sub}"
     mkdir -p "${SUB_ROOT}"
     
-    # Sync compiled React static assets
-    rsync -a --delete "${FRONTEND_DIR}/dist/" "${SUB_ROOT}/" 2>/dev/null || cp -R "${FRONTEND_DIR}/dist/"* "${SUB_ROOT}/"
+    # Sync compiled React static assets from pre-compiled bundle
+    rsync -a --delete "${DIST_DIR}/" "${SUB_ROOT}/" 2>/dev/null || cp -R "${DIST_DIR}/"* "${SUB_ROOT}/"
     
     # Ensure Apache SPA routing .htaccess exists
     cp /tmp/cp_spa_htaccess "${SUB_ROOT}/.htaccess"

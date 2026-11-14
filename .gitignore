@@ -21,7 +21,9 @@ build/
 .vite/
 .cache/
 .phpunit.result.cache
+!dist/
 !frontend/dist/
+!webroots/
 
 # IDE & Editor
 .vscode/
