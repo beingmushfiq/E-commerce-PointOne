@@ -41,11 +41,26 @@ api.interceptors.request.use((config) => {
         localStorage.getItem('cp_platform_token');
     }
 
-    if (token) {
+    if (token && !token.startsWith('mock_')) {
       config.headers.Authorization = `Bearer ${token}`;
     }
   }
   return config;
 });
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      const url = error.config?.url || '';
+      if (url.includes('/auth/me') || url.includes('/auth/logout')) {
+        localStorage.removeItem('cp_staff_token');
+        localStorage.removeItem('token');
+        localStorage.removeItem('auth_token');
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default api;

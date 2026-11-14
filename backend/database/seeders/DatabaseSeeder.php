@@ -66,35 +66,38 @@ class DatabaseSeeder extends Seeder
         }
 
         // Default Platform Superadmin User
-        $superadmin = User::create([
-            'name' => 'Platform Superadmin',
-            'email' => 'superadmin@centerpoint.com',
-            'password' => Hash::make('password123'),
-        ]);
+        $superadmin = User::firstOrCreate(
+            ['email' => 'superadmin@centerpoint.com'],
+            ['name' => 'Platform Superadmin', 'password' => Hash::make('password123')]
+        );
         $superadmin->assignRole($adminRole);
 
         // Default Store Admin User
-        $admin = User::create([
-            'name' => 'Store Administrator',
-            'email' => 'admin@centerpoint.com',
-            'password' => Hash::make('password123'),
-        ]);
+        $admin = User::firstOrCreate(
+            ['email' => 'admin@centerpoint.com'],
+            ['name' => 'Store Administrator', 'password' => Hash::make('password123')]
+        );
         $admin->assignRole($adminRole);
 
+        // Merchant Atelier Staff User
+        $merchant = User::firstOrCreate(
+            ['email' => 'merchant@centerpoint.atelier'],
+            ['name' => 'Atelier Store Manager', 'password' => Hash::make('password123')]
+        );
+        $merchant->assignRole($adminRole);
+
         // Legacy Admin User
-        $legacyAdmin = User::create([
-            'name' => 'System Admin',
-            'email' => 'admin@gmail.com',
-            'password' => Hash::make('12345678'),
-        ]);
+        $legacyAdmin = User::firstOrCreate(
+            ['email' => 'admin@gmail.com'],
+            ['name' => 'System Admin', 'password' => Hash::make('12345678')]
+        );
         $legacyAdmin->assignRole($adminRole);
 
         // Default Customer User
-        $customer = User::create([
-            'name' => 'Alexander Wright',
-            'email' => 'customer@centerpoint.com',
-            'password' => Hash::make('password123'),
-        ]);
+        $customer = User::firstOrCreate(
+            ['email' => 'customer@centerpoint.com'],
+            ['name' => 'Alexander Wright', 'password' => Hash::make('password123')]
+        );
         $customer->assignRole($customerRole);
 
         // 2. Sliders

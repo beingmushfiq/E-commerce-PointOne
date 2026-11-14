@@ -9,8 +9,8 @@ export const PlatformLogin: React.FC = () => {
   const location = useLocation();
   const { login } = useAuth();
 
-  const [secretKey, setSecretKey] = useState('superadmin_master_secret');
-  const [operatorId, setOperatorId] = useState('operator_sre_lead');
+  const [operatorId, setOperatorId] = useState('superadmin@centerpoint.com');
+  const [secretKey, setSecretKey] = useState('password123');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,29 +20,33 @@ export const PlatformLogin: React.FC = () => {
     setError(null);
 
     try {
-      const res = await api.post('/platform/auth/mcp-login', { secret_key: secretKey, operator_id: operatorId });
-      const token = res.data?.data?.token || 'mcp_platform_token_authenticated';
-      const mockOp = {
-        id: 99,
-        name: 'Platform Superadmin',
-        email: 'superadmin@centerpoint.atelier',
-        roles: ['superadmin', 'platform_admin'],
-        permissions: ['all'],
-      };
-      login(token, mockOp, 'platform');
-      const from = (location.state as any)?.from?.pathname || '/platform';
-      navigate(from, { replace: true });
-    } catch {
-      // Fallback operator session
-      const mockOp = {
-        id: 99,
-        name: 'Platform Superadmin',
-        email: 'superadmin@centerpoint.atelier',
-        roles: ['superadmin', 'platform_admin'],
-        permissions: ['all'],
-      };
-      login('mcp_platform_token_authenticated', mockOp, 'platform');
-      navigate('/platform', { replace: true });
+      const res = await api.post('/platform/auth/mcp-login', {
+        email: operatorId,
+        password: secretKey,
+        operator_id: operatorId,
+        secret_key: secretKey,
+      });
+      const data = res.data?.data;
+      if (data?.token) {
+        const opUser = {
+          id: data.user?.id || 99,
+          name: data.user?.name || 'Platform Superadmin',
+          email: data.user?.email || operatorId,
+          roles: ['superadmin', 'platform_admin'],
+          permissions: ['all'],
+        };
+        login(data.token, opUser, 'platform');
+        const from = (location.state as any)?.from?.pathname || '/platform';
+        navigate(from, { replace: true });
+        return;
+      }
+    } catch (err: any) {
+      const errMsg =
+        err.response?.data?.errors?.email?.[0] ||
+        err.response?.data?.errors?.password?.[0] ||
+        err.response?.data?.message ||
+        'Authentication failed. Please verify credentials.';
+      setError(errMsg);
     } finally {
       setLoading(false);
     }
@@ -63,6 +67,35 @@ export const PlatformLogin: React.FC = () => {
           </p>
         </div>
 
+        {/* Quick Credentials Pill Selector */}
+        <div className="p-3 rounded-2xl bg-zinc-900 border border-zinc-800 space-y-2">
+          <span className="text-[10px] uppercase font-mono tracking-widest text-zinc-400 block font-semibold">
+            Quick-Fill Operator Credentials:
+          </span>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setOperatorId('superadmin@centerpoint.com');
+                setSecretKey('password123');
+              }}
+              className="px-2.5 py-1 rounded-lg bg-zinc-800 border border-zinc-700 text-[11px] font-mono hover:border-amber-500 text-zinc-300 hover:text-white transition cursor-pointer"
+            >
+              superadmin@centerpoint.com
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setOperatorId('operator_sre_lead');
+                setSecretKey('superadmin_master_secret');
+              }}
+              className="px-2.5 py-1 rounded-lg bg-zinc-800 border border-zinc-700 text-[11px] font-mono hover:border-amber-500 text-zinc-300 hover:text-white transition cursor-pointer"
+            >
+              Master Secret Key
+            </button>
+          </div>
+        </div>
+
         {error && (
           <div className="p-3 rounded-xl bg-rose-950/40 border border-rose-800 text-xs text-rose-400">
             {error}
@@ -71,7 +104,7 @@ export const PlatformLogin: React.FC = () => {
 
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           <div>
-            <label className="text-zinc-400 block mb-1">Operator Identifier</label>
+            <label className="text-zinc-400 block mb-1">Operator Email or Identifier</label>
             <input
               type="text"
               required
@@ -82,7 +115,7 @@ export const PlatformLogin: React.FC = () => {
           </div>
 
           <div>
-            <label className="text-zinc-400 block mb-1">Master Authorization Key</label>
+            <label className="text-zinc-400 block mb-1">Master Password or Secret Key</label>
             <input
               type="password"
               required

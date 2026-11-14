@@ -29,17 +29,13 @@ export const StudioLogin: React.FC = () => {
         navigate(from, { replace: true });
         return;
       }
-    } catch {
-      // Fallback staff session for demo
-      const mockStaff = {
-        id: 1,
-        name: 'Mushfiqur Rahman',
-        email,
-        roles: ['admin', 'staff'],
-        permissions: ['manage-inventory', 'manage-catalog', 'manage-finance', 'manage-cms'],
-      };
-      login('mock_staff_token_authorized', mockStaff, 'staff');
-      navigate('/studio', { replace: true });
+    } catch (err: any) {
+      const errMsg =
+        err.response?.data?.errors?.email?.[0] ||
+        err.response?.data?.errors?.password?.[0] ||
+        err.response?.data?.message ||
+        'Authentication failed. Please verify credentials.';
+      setError(errMsg);
     } finally {
       setLoading(false);
     }
@@ -65,6 +61,35 @@ export const StudioLogin: React.FC = () => {
             {error}
           </div>
         )}
+
+        {/* Quick Demo Credentials Pill Selector */}
+        <div className="p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/80 dark:border-zinc-700/60 space-y-2">
+          <span className="text-[10px] uppercase font-mono tracking-widest text-zinc-400 block font-semibold">
+            Quick-Fill Verified Credentials:
+          </span>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setEmail('admin@centerpoint.com');
+                setPassword('password123');
+              }}
+              className="px-2.5 py-1 rounded-lg bg-white dark:bg-zinc-700 border border-zinc-200 dark:border-zinc-600 text-[11px] font-mono hover:border-amber-500 transition cursor-pointer"
+            >
+              admin@centerpoint.com
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setEmail('merchant@centerpoint.atelier');
+                setPassword('password123');
+              }}
+              className="px-2.5 py-1 rounded-lg bg-white dark:bg-zinc-700 border border-zinc-200 dark:border-zinc-600 text-[11px] font-mono hover:border-amber-500 transition cursor-pointer"
+            >
+              merchant@centerpoint.atelier
+            </button>
+          </div>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 text-xs font-mono">
           <div>

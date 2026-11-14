@@ -10,8 +10,10 @@ interface AuthContextType {
   platformToken: string | null;
   activeGuard: AuthGuard;
   isLoading: boolean;
+  isAdmin: boolean;
   login: (token: string, user: User, guard?: AuthGuard) => void;
-  logout: (guard?: AuthGuard) => void;
+  loginWithCredentials: (email: string, password: string, guard?: AuthGuard) => Promise<any>;
+  logout: (guard?: AuthGuard, silent?: boolean) => void;
   hasPermission: (permission: string) => boolean;
   hasRole: (role: string) => boolean;
   isPlatformAdmin: boolean;
@@ -37,13 +39,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [activeGuard, setActiveGuard] = useState<AuthGuard>('customer');
 
-  const logout = useCallback((guard: AuthGuard = 'staff') => {
+  const logout = useCallback((guard: AuthGuard = 'staff', silent = false) => {
     if (guard === 'platform') {
       localStorage.removeItem('cp_platform_token');
       localStorage.removeItem('mcp_token');
       setPlatformToken(null);
     } else {
-      if (token) {
+      if (token && !silent && !token.startsWith('mock_')) {
         api.post('/auth/logout').catch(() => {});
       }
       localStorage.removeItem('cp_staff_token');
@@ -56,6 +58,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     if (token) {
+      if (token.startsWith('mock_')) {
+        setIsLoading(false);
+        return;
+      }
       api.get('/auth/me')
         .then((res) => {
           const userData = res.data?.data?.user || res.data?.data;
@@ -67,7 +73,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         })
         .catch(() => {
-          logout('staff');
+          logout('staff', true);
         })
         .finally(() => {
           setIsLoading(false);
@@ -90,6 +96,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(newUser);
       setActiveGuard(guard);
     }
+  };
+
+  const loginWithCredentials = async (email: string, password: string, guard: AuthGuard = 'staff') => {
+    const res = await api.post('/auth/login', { email, password });
+    const data = res.data?.data;
+    if (data?.token && data?.user) {
+      login(data.token, data.user, guard);
+      return data;
+    }
+    throw new Error('Invalid login response from server');
   };
 
   const hasPermission = (permission: string): boolean => {
@@ -125,7 +141,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         platformToken,
         activeGuard,
         isLoading,
+        isAdmin: isStaff || isPlatformAdmin,
         login,
+        loginWithCredentials,
         logout,
         hasPermission,
         hasRole,

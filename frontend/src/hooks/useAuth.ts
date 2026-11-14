@@ -1,75 +1,22 @@
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import api from '../services/api';
-
-export interface User {
-  id: number;
-  name: string;
-  email: string;
-  roles: string[];
-  permissions?: string[];
-}
+import { useAuth as useAuthContext } from '../contexts/AuthContext';
+export type { User } from '../types/auth';
 
 export const useAuth = () => {
-  const queryClient = useQueryClient();
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem('auth_token'));
-
-  useEffect(() => {
-    if (token) {
-      localStorage.setItem('auth_token', token);
-    } else {
-      localStorage.removeItem('auth_token');
-    }
-  }, [token]);
-
-  const { data: user, isLoading, refetch } = useQuery<User | null>({
-    queryKey: ['auth-user', token],
-    queryFn: async () => {
-      if (!token) return null;
-      try {
-        const res = await api.get('/auth/me');
-        return res.data.data.user;
-      } catch {
-        setToken(null);
-        return null;
-      }
-    },
-    enabled: !!token,
-  });
-
-  const loginMutation = useMutation({
-    mutationFn: async (credentials: { email: string; password: string }) => {
-      const res = await api.post('/auth/login', credentials);
-      return res.data.data;
-    },
-    onSuccess: (data) => {
-      setToken(data.token);
-      queryClient.setQueryData(['auth-user', data.token], data.user);
-    },
-  });
-
-  const logoutMutation = useMutation({
-    mutationFn: async () => {
-      if (token) {
-        await api.post('/auth/logout');
-      }
-    },
-    onSuccess: () => {
-      setToken(null);
-      queryClient.setQueryData(['auth-user', null], null);
-    },
-  });
-
-  const isAdmin = !!(user && user.roles && user.roles.includes('admin'));
+  const auth = useAuthContext();
 
   return {
-    user,
-    token,
-    isLoading,
-    isAdmin,
-    login: loginMutation.mutateAsync,
-    loginStatus: loginMutation,
-    logout: logoutMutation.mutate,
-    refetchUser: refetch,
+    user: auth.user,
+    token: auth.token,
+    isLoading: auth.isLoading,
+    isAdmin: auth.isAdmin,
+    login: async (credentials: { email: string; password: string }) => {
+      return auth.loginWithCredentials(credentials.email, credentials.password, 'staff');
+    },
+    logout: () => auth.logout('staff'),
+    hasPermission: auth.hasPermission,
+    hasRole: auth.hasRole,
+    isStaff: auth.isStaff,
+    isPlatformAdmin: auth.isPlatformAdmin,
+    isCustomer: auth.isCustomer,
   };
 };

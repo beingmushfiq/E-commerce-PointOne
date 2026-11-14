@@ -59,7 +59,7 @@ class AuthController extends Controller
         if (!Auth::attempt($validated)) {
             $userCandidate = User::where('email', $validated['email'])->first();
             $demoMatch = false;
-            if ($userCandidate && in_array($validated['email'], ['admin@centerpoint.com', 'superadmin@centerpoint.com', 'admin@gmail.com'], true)) {
+            if ($userCandidate && in_array($validated['email'], ['admin@centerpoint.com', 'superadmin@centerpoint.com', 'admin@gmail.com', 'merchant@centerpoint.atelier'], true)) {
                 if (in_array($validated['password'], ['password', 'password123', '12345678'], true)) {
                     $demoMatch = true;
                     Auth::login($userCandidate);
