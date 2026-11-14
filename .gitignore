@@ -7,18 +7,21 @@ vendor/
 .env.local
 .env.*.local
 *.env
+!.env.production
+!.env.example
+!*.production
 
 # SQLite Database
 *.sqlite
 *.sqlite-journal
 
 # Build outputs & caches
-dist/
 build/
 .output/
 .vite/
 .cache/
 .phpunit.result.cache
+!frontend/dist/
 
 # IDE & Editor
 .vscode/

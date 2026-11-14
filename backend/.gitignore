@@ -2,7 +2,8 @@
 .DS_Store
 .env
 .env.backup
-.env.production
+# .env.production tracked for cPanel deployment
+!.env.production
 .phpactor.json
 .phpunit.result.cache
 /.codex

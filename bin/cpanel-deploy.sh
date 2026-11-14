@@ -117,7 +117,10 @@ fi
 echo -e "\n${YELLOW}→ [3/8] Validating Production Environment (.env)...${NC}"
 cd "${BACKEND_DIR}"
 if [ ! -f ".env" ]; then
-    if [ -f ".env.example" ]; then
+    if [ -f ".env.production" ]; then
+        echo "  • Initializing production environment from .env.production..."
+        cp .env.production .env
+    elif [ -f ".env.example" ]; then
         echo "  • Creating .env from .env.example..."
         cp .env.example .env
         "${PHP_BIN}" artisan key:generate --force
