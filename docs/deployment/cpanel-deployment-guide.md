@@ -1,96 +1,216 @@
-# CENTERPOINT — cPanel & Shared Hosting Production Deployment Guide
-
-## 1. Overview & Operational Profile
-
-CENTERPOINT Standalone Edition is architected to run seamlessly in cost-effective cPanel and shared hosting environments without sacrificing financial integrity, inventory race safety, or SEO performance.
-
-Unlike traditional SaaS platforms that enforce long-running daemons (e.g., Supervisord, Horizon, Redis servers), CENTERPOINT provides an explicit **cPanel Operating Profile**:
-- **Database Engine:** Single MySQL database (or SQLite for small catalogs / staging).
-- **Queue Worker:** Database-backed queue with a periodic cron execution (`php artisan queue:work --stop-when-empty`).
-- **Cache & Sessions:** Database-backed cache and session storage eliminating external Redis requirements.
-- **Static Asset Serving:** Compiled Vite assets pre-bundled directly into Laravel's public directory.
-- **Web Server:** Apache with `.htaccess` mod_rewrite and Content-Security-Policy headers.
+# CENTERPOINT — cPanel Production Deployment & Automation Guide
+**Multi-Subdomain SaaS & Standalone Hybrid Architecture**  
+**Target Domain:** `devcenterpoint.com` | **Stack:** Laravel 13 (PHP 8.3) + React 19 / Vite + MySQL 8.0
 
 ---
 
-## 2. Directory Layout on cPanel
+## 1. Architectural Summary & Operating Topology
 
-To ensure maximum security, **never place the entire application code directly inside `public_html`**. Application source code, configuration files, and SQLite/log files must live above the web root.
-
-### Recommended Filesystem Layout
+CENTERPOINT is deployed on cPanel with high security, separating backend code from public webroots while isolating each surface into dedicated subdomains:
 
 ```
-/home/username/
-├── centerpoint/                # Private application directory (OUTSIDE webroot)
-│   ├── app/
-│   ├── bootstrap/
-│   ├── config/
-│   ├── database/
-│   ├── storage/
-│   ├── vendor/
-│   ├── artisan
-│   └── .env
-└── public_html/                # Publicly accessible webroot
-    ├── assets/                 # Compiled Vite React JS/CSS
-    ├── storage -> ../centerpoint/storage/app/public
-    ├── index.php               # Laravel bootstrap entrypoint
-    ├── manifest.json           # PWA Manifest
-    ├── sw.js                   # PWA Service Worker
-    ├── robots.txt              # Dynamic or static robots.txt
-    └── .htaccess               # Apache URL rewrite rules
+/home/{username}/
+├── centerpoint/                            # Private application repository (OUTSIDE webroot)
+│   ├── backend/                           # Laravel 13 API core
+│   │   ├── app/
+│   │   ├── config/
+│   │   ├── storage/
+│   │   ├── vendor/
+│   │   └── artisan
+│   ├── frontend/                          # React 19 + Vite SPA source
+│   ├── bin/
+│   │   └── cpanel-deploy.sh               # Master deployment engine
+│   ├── .cpanel.yml                        # cPanel Git Version Control deployment trigger
+│   ├── deploy.sh                          # Root one-click terminal wrapper
+│   └── .env                               # Production environment secrets
+│
+└── public_html/                           # cPanel Document Root Area
+    ├── api/ -> ../centerpoint/backend/public  # Backend API Ingress (api.centerpoint.devcenterpoint.com)
+    ├── centerpoint/                       # Marketing & Landing SPA (centerpoint.devcenterpoint.com)
+    ├── studio/                            # Merchant Studio SPA (studio.centerpoint.devcenterpoint.com)
+    ├── control/                           # Master Control Panel SPA (control.centerpoint.devcenterpoint.com)
+    ├── shops/                             # Wildcard Tenant Storefront SPA (*.shops.devcenterpoint.com)
+    ├── docs/                              # Documentation SPA (docs.centerpoint.devcenterpoint.com)
+    └── status/                            # System Status SPA (status.centerpoint.devcenterpoint.com)
 ```
 
 ---
 
-## 3. Step-by-Step Installation Procedure
+## 2. Part 1: Database Architecture & Partitioning on cPanel
 
-### Step 1: Upload & Extract Release
-1. Log into your cPanel File Manager (or connect via SFTP/SSH).
-2. Create a folder named `centerpoint` in `/home/username/`.
-3. Upload `centerpoint-standalone-v1.0.0.zip` and extract its contents into `/home/username/centerpoint`.
-4. Copy or move everything from `/home/username/centerpoint/backend/public/*` into `/home/username/public_html/`.
+### 2.1 Central Platform Database
+The central database stores tenant accounts, domain routing tables, platform audit logs, and global billing subscriptions.
 
-### Step 2: Configure `public_html/index.php`
-Edit `/home/username/public_html/index.php` to point to the private `centerpoint` directory:
+1. Navigate to **cPanel > MySQL® Database Wizard**.
+2. **Step 1 — Create Database:**
+   - Database name: `{username}_cp_central` (e.g., `devcent_cp_central`).
+3. **Step 2 — Create Database User:**
+   - Username: `{username}_cp_master` (e.g., `devcent_cp_master`).
+   - Generate a 24+ character password and store it safely.
+4. **Step 3 — Assign Privileges:**
+   - Select **ALL PRIVILEGES**.
+   - Collation: `utf8mb4_unicode_ci` (default in MySQL 8.0).
 
-```php
-<?php
+### 2.2 Tenant Database Partitioning Strategies
+On cPanel, CENTERPOINT supports two tenant isolation strategies:
 
-use Illuminate\Http\Request;
+#### Strategy A: Dedicated Databases per Tenant (Recommended for Enterprise / High Isolation)
+- Database name pattern: `{username}_tnt_{tenant_slug}` (e.g., `devcent_tnt_fashionhouse`).
+- Assign the master user `{username}_cp_master` with **ALL PRIVILEGES** to each tenant database.
+- Automated creation via cPanel UAPI:
+  ```bash
+  uapi Mysql create_database name="{username}_tnt_${SLUG}"
+  uapi Mysql set_privileges_on_database user="{username}_cp_master" database="{username}_tnt_${SLUG}" privileges="ALL PRIVILEGES"
+  ```
 
-define('LARAVEL_START', microtime(true));
+#### Strategy B: Shared Schema with Tenant ID Partitioning (Recommended for Shared Hosting)
+- Set `CPANEL_MODE=true` in `.env`.
+- All operational data runs within `{username}_cp_central`, partitioned by indexed `tenant_id` foreign keys, with database-backed queue and cache enabled.
 
-// Determine if the application is in maintenance mode...
-if (file_exists($maintenance = __DIR__.'/../centerpoint/storage/framework/maintenance.php')) {
-    require $maintenance;
-}
+---
 
-// Register the Composer autoloader...
-require __DIR__.'/../centerpoint/vendor/autoload.php';
+## 3. Part 2: Subdomain Creation & Wildcard DNS on cPanel
 
-// Bootstrap Laravel and handle the request...
-(require_once __DIR__.'/../centerpoint/bootstrap/app.php')
-    ->handleRequest(Request::capture());
+### 3.1 DNS Zone Configuration
+Ensure your DNS records in **cPanel > Zone Editor** (or Cloudflare) have these records pointing to your server IP:
+
+| Type | Record | Value | TTL |
+| :--- | :--- | :--- | :--- |
+| **A** | `centerpoint.devcenterpoint.com` | `SERVER_IP` | 14400 |
+| **A** | `studio.centerpoint.devcenterpoint.com` | `SERVER_IP` | 14400 |
+| **A** | `control.centerpoint.devcenterpoint.com` | `SERVER_IP` | 14400 |
+| **A** | `api.centerpoint.devcenterpoint.com` | `SERVER_IP` | 14400 |
+| **A** | `docs.centerpoint.devcenterpoint.com` | `SERVER_IP` | 14400 |
+| **A** | `status.centerpoint.devcenterpoint.com` | `SERVER_IP` | 14400 |
+| **A** | `*.shops.devcenterpoint.com` | `SERVER_IP` | 14400 |
+
+### 3.2 Subdomain Creation in cPanel GUI
+Navigate to **cPanel > Domains** (or **Subdomains**):
+
+1. **API Ingress:**
+   - Domain: `api.centerpoint.devcenterpoint.com`
+   - Document Root: `public_html/api`
+2. **Main Product Website:**
+   - Domain: `centerpoint.devcenterpoint.com`
+   - Document Root: `public_html/centerpoint`
+3. **Merchant Studio:**
+   - Domain: `studio.centerpoint.devcenterpoint.com`
+   - Document Root: `public_html/studio`
+4. **Master Control Panel:**
+   - Domain: `control.centerpoint.devcenterpoint.com`
+   - Document Root: `public_html/control`
+5. **Documentation Portal:**
+   - Domain: `docs.centerpoint.devcenterpoint.com`
+   - Document Root: `public_html/docs`
+6. **System Status Portal:**
+   - Domain: `status.centerpoint.devcenterpoint.com`
+   - Document Root: `public_html/status`
+7. **Wildcard Tenant Storefronts:**
+   - Domain: `*.shops.devcenterpoint.com`
+   - Document Root: `public_html/shops`
+
+### 3.3 SSL Certificate Issuance (AutoSSL / Let's Encrypt)
+1. Go to **cPanel > SSL/TLS Status**.
+2. Select all subdomains (`centerpoint`, `studio`, `control`, `api`, `docs`, `status`, and `*.shops.devcenterpoint.com`).
+3. Click **Run AutoSSL**. AutoSSL will provision DV certificates.
+> [!NOTE]
+> If using Cloudflare for DNS, keep SSL mode set to **Full (Strict)** and install an Origin Certificate on cPanel to cover `devcenterpoint.com` and `*.devcenterpoint.com`, `*.shops.devcenterpoint.com`.
+
+---
+
+## 4. Part 3: cPanel Git Version Control & Automated Deployment
+
+### 4.1 Set Up Deployment Key in cPanel
+1. Open **cPanel > Terminal** (or SSH).
+2. Generate an SSH key for deployment:
+   ```bash
+   ssh-keygen -t ed25519 -C "deploy@devcenterpoint.com" -f ~/.ssh/id_ed25519_deploy -N ""
+   cat ~/.ssh/id_ed25519_deploy.pub
+   ```
+3. Copy the public key and add it as a **Deploy Key** (Read-Only) in your GitHub / GitLab repository settings.
+
+### 4.2 Initialize Git Repository in cPanel GUI
+1. Navigate to **cPanel > Git™ Version Control**.
+2. Click **Create**:
+   - **Clone Repository:** Enabled
+   - **Clone URL:** `git@github.com:your-org/E-commerce-PointOne.git`
+   - **Repository Path:** `centerpoint` (this clones into `/home/{username}/centerpoint`)
+   - **Repository Name:** `CENTERPOINT`
+3. Click **Create**. cPanel clones the codebase.
+
+### 4.3 Automated `.cpanel.yml` Hook
+The repository includes a `.cpanel.yml` file in the root:
+
+```yaml
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/$(whoami)/centerpoint
+    - /bin/bash $DEPLOYPATH/bin/cpanel-deploy.sh --cpanel-git
 ```
 
-### Step 3: Create MySQL Database in cPanel
-1. Open **cPanel > MySQL Database Wizard**.
-2. Create a database: e.g., `username_centerpoint`.
-3. Create a database user: e.g., `username_dbuser` with a strong password.
-4. Assign the user to the database with **ALL PRIVILEGES**.
+Whenever you push to `main` (via cPanel Git webhook) or click **Update from Remote > Deploy HEAD Commit** in cPanel, cPanel automatically executes `bin/cpanel-deploy.sh`!
 
-### Step 4: Configure `.env`
-In `/home/username/centerpoint/.env`, configure the cPanel operational settings:
+---
 
-```env
+## 5. Part 4: One-Click Terminal Deployment Script
+
+You can deploy or update the entire platform with a single command in the **cPanel Terminal**:
+
+```bash
+cd ~/centerpoint
+bash deploy.sh
+```
+
+### 5.1 Deployment Flags & Options
+| Command | Action |
+| :--- | :--- |
+| `bash deploy.sh` | **Full Production Deploy:** Maintenance mode, git sync, composer install, frontend build, multi-subdomain asset distribution, migrations, cache, health checks. |
+| `bash deploy.sh --quick` | **Quick Deploy:** Skips heavy Composer update and asset rebuild; runs migrations, clears/optimizes cache, and reloads. |
+| `bash deploy.sh --skip-build` | **Backend-Only Deploy:** Pulls git changes, installs composer packages, runs migrations, and rebuilds caches. |
+| `bash deploy.sh --fresh` | **Fresh Seed Deploy:** (Staging only) Runs `migrate:fresh --seed` with sample catalog data. |
+
+### 5.2 What the Deployment Script Executes Automatically
+```mermaid
+flowchart TD
+    A["Run deploy.sh"] --> B["Detect PHP 8.3 & Composer CLI"]
+    B --> C["Activate Graceful Maintenance Mode"]
+    C --> D["Git Fetch & Hard Reset to origin/main"]
+    D --> E["Composer Install (--no-dev --optimize-autoloader)"]
+    E --> F["Vite Build: React 19 Frontend"]
+    F --> G["Distribute SPAs to 6 Subdomain Document Roots"]
+    G --> H["Generate Apache .htaccess SPA Rewrites"]
+    H --> I["Symlink public_html/api to backend/public"]
+    I --> J["Run Database Migrations (php artisan migrate --force)"]
+    J --> K["Link Storage (php artisan storage:link)"]
+    K --> L["Optimize Caches (config, route, view)"]
+    L --> M["Verify API Health & Deactivate Maintenance (artisan up)"]
+```
+
+---
+
+## 6. Part 5: Production `.env` Configuration File
+
+Create `/home/{username}/centerpoint/.env` (or in `/home/{username}/centerpoint/backend/.env`):
+
+```ini
 APP_NAME=CENTERPOINT
 APP_ENV=production
-APP_KEY=base64:...
+APP_KEY=base64:GENERATE_WITH_ARTISAN_KEY_GENERATE
 APP_DEBUG=false
-APP_URL=https://yourstore.com
+APP_URL=https://api.centerpoint.devcenterpoint.com
 
-# Deployment Edition & Profile
-CENTERPOINT_EDITION=standalone
+# Multi-Tenant & Domain Routing
+CENTERPOINT_EDITION=saas
+CENTERPOINT_DOMAIN_SUFFIX=shops.devcenterpoint.com
+CENTERPOINT_MARKETING_URL=https://centerpoint.devcenterpoint.com
+CENTERPOINT_STUDIO_URL=https://studio.centerpoint.devcenterpoint.com
+CENTERPOINT_CONTROL_URL=https://control.centerpoint.devcenterpoint.com
+CENTERPOINT_API_URL=https://api.centerpoint.devcenterpoint.com
+CENTERPOINT_DOCS_URL=https://docs.centerpoint.devcenterpoint.com
+CENTERPOINT_STATUS_URL=https://status.centerpoint.devcenterpoint.com
+
+# cPanel Operational Profile (Resilient & Daemonless)
 CPANEL_MODE=true
 CPANEL_FORCE_DB_QUEUE=true
 CPANEL_FORCE_DB_CACHE=true
@@ -99,93 +219,70 @@ CPANEL_FORCE_DB_CACHE=true
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=username_centerpoint
-DB_USERNAME=username_dbuser
-DB_PASSWORD=your_secure_password
+DB_DATABASE=devcent_cp_central
+DB_USERNAME=devcent_cp_master
+DB_PASSWORD=YOUR_STRONG_DATABASE_PASSWORD
 
-# Database Queue & Cache Fallbacks
+# Cache, Queue & Session (Database Fallback)
 CACHE_STORE=database
 QUEUE_CONNECTION=database
 SESSION_DRIVER=database
+SESSION_LIFETIME=120
 
-# Mail Configuration (cPanel Exim / SMTP)
+# Storage Driver
+FILESYSTEM_DISK=public
+
+# Mail Configuration (cPanel Exim SMTP)
 MAIL_MAILER=smtp
-MAIL_HOST=mail.yourstore.com
+MAIL_HOST=mail.devcenterpoint.com
 MAIL_PORT=465
-MAIL_USERNAME=noreply@yourstore.com
-MAIL_PASSWORD=your_email_password
+MAIL_USERNAME=noreply@devcenterpoint.com
+MAIL_PASSWORD=YOUR_EMAIL_ACCOUNT_PASSWORD
 MAIL_ENCRYPTION=ssl
-MAIL_FROM_ADDRESS="noreply@yourstore.com"
-MAIL_FROM_NAME="CENTERPOINT Store"
-```
-
-### Step 5: Run Database Migrations
-If you have SSH access:
-```bash
-cd /home/username/centerpoint
-php artisan migrate --force
-php artisan db:seed --class=ChartOfAccountsSeeder --force
-```
-
-If you do NOT have SSH access:
-Use the cPanel **Cron Jobs** tool to execute a one-time migration command:
-```bash
-/usr/local/bin/php /home/username/centerpoint/artisan migrate --force
-```
-*(Remove the cron job once completed).*
-
-### Step 6: Create Storage Symlink
-Via SSH:
-```bash
-cd /home/username/centerpoint
-php artisan storage:link
-```
-Or manually in File Manager, create a symbolic link from `/home/username/public_html/storage` targeting `/home/username/centerpoint/storage/app/public`.
-
----
-
-## 4. Cron Configuration for Background Jobs & Scheduled Tasks
-
-In shared hosting environments without Supervisord, set up two cron jobs via **cPanel > Cron Jobs**:
-
-### 1. The Laravel Scheduler (Runs Every Minute)
-Executes scheduled tasks, sitemap regenerations, catalog index updates, and report aggregation.
-```cron
-* * * * * /usr/local/bin/php /home/username/centerpoint/artisan schedule:run >> /dev/null 2>&1
-```
-
-### 2. The Fallback Queue Worker (Runs Every 2 to 5 Minutes)
-Processes queued jobs (e.g. Meta CAPI events, order confirmation emails, invoice generation). With `--stop-when-empty`, it gracefully exits as soon as the queue is drained, avoiding process accumulation or hosting memory limit kills.
-```cron
-*/3 * * * * /usr/local/bin/php /home/username/centerpoint/artisan queue:work --stop-when-empty --tries=3 --max-jobs=50 >> /dev/null 2>&1
+MAIL_FROM_ADDRESS="noreply@devcenterpoint.com"
+MAIL_FROM_NAME="CENTERPOINT Platform"
 ```
 
 ---
 
-## 5. Security & Content Security Policy (CSP)
+## 7. Part 6: cPanel Cron Configuration
 
-Ensure your `/home/username/public_html/.htaccess` enforces HTTPS and isolates custom code:
+Shared cPanel hosting does not support continuous background processes (`supervisord` / `php artisan horizon`). CENTERPOINT handles background processing via cPanel scheduled cron jobs:
 
-```apache
-<IfModule mod_rewrite.c>
-    RewriteEngine On
+Navigate to **cPanel > Cron Jobs**:
 
-    # Enforce HTTPS
-    RewriteCond %{HTTPS} off
-    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
-
-    # Handle Front Controller...
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule ^ index.php [L]
-</IfModule>
-
-# Security Headers
-<IfModule mod_headers.c>
-    Header always set X-Content-Type-Options "nosniff"
-    Header always set X-Frame-Options "SAMEORIGIN"
-    Header always set X-XSS-Protection "1; mode=block"
-    Header always set Referrer-Policy "strict-origin-when-cross-origin"
-</IfModule>
+### Cron 1: Laravel Task Scheduler (Every Minute)
+Runs scheduled reports, inventory reconciliation, and recurring billing:
+```bash
+* * * * * /usr/local/bin/ea-php83 /home/{username}/centerpoint/backend/artisan schedule:run >> /dev/null 2>&1
 ```
 
+### Cron 2: Queue Worker (Every 2 Minutes)
+Processes emails, webhooks, invoice generation, and audit logging asynchronously:
+```bash
+*/2 * * * * /usr/local/bin/ea-php83 /home/{username}/centerpoint/backend/artisan queue:work --stop-when-empty --tries=3 --timeout=90 >> /dev/null 2>&1
+```
+
+---
+
+## 8. Verification & Post-Deployment Checklist
+
+After running `bash deploy.sh`, verify all endpoints:
+
+1. **Backend API Health:**
+   ```bash
+   curl -I https://api.centerpoint.devcenterpoint.com/api/v1/health
+   # Expected: HTTP/2 200 OK
+   ```
+2. **Main Product Website:**
+   Open `https://centerpoint.devcenterpoint.com` in your browser. Verify the luxury hero banner and onboarding registration.
+3. **Merchant Studio:**
+   Open `https://studio.centerpoint.devcenterpoint.com`. Test login using seeded tenant credentials:
+   - Email: `merchant@centerpoint.atelier`
+   - Password: `password123`
+4. **Master Control Panel:**
+   Open `https://control.centerpoint.devcenterpoint.com`. Test superadmin login:
+   - Email: `superadmin@centerpoint.com`
+   - Password: `password123`
+5. **Wildcard Tenant Storefront:**
+   Open `https://fashionhouse.shops.devcenterpoint.com` or `https://techmart.shops.devcenterpoint.com`. Verify the tenant catalog renders dynamically.

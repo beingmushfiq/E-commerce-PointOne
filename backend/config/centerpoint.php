@@ -28,11 +28,21 @@ return [
     'tenancy' => [
         'central_connection' => env('CENTRAL_DB_CONNECTION', 'central'),
         'tenant_connection'  => env('TENANT_DB_CONNECTION', 'tenant'),
-        'domain_suffix'      => env('TENANT_DOMAIN_SUFFIX', 'centerpoint.test'),
+        'domain_suffix'      => env('TENANT_DOMAIN_SUFFIX', 'shops.devcenterpoint.com'),
         'exempt_domains'     => [
             'localhost',
             '127.0.0.1',
-            env('CENTRAL_DOMAIN', 'platform.centerpoint.test'),
+            env('CENTRAL_DOMAIN', 'control.centerpoint.devcenterpoint.com'),
+            'centerpoint.devcenterpoint.com',
+            'studio.centerpoint.devcenterpoint.com',
+            'api.centerpoint.devcenterpoint.com',
+            'docs.centerpoint.devcenterpoint.com',
+            'status.centerpoint.devcenterpoint.com',
+        ],
+        'reserved_slugs'     => [
+            'admin', 'administrator', 'studio', 'control', 'api', 'shops', 'shop',
+            'billing', 'support', 'status', 'auth', 'app', 'cdn', 'mail', 'dev',
+            'staging', 'test', 'master', 'root', 'help', 'docs', 'assets',
         ],
     ],
 

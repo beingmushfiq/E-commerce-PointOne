@@ -1,0 +1,5 @@
+---
+deployment:
+  tasks:
+    - export PROJECT_ROOT=$(pwd)
+    - /bin/bash bin/cpanel-deploy.sh --cpanel-git

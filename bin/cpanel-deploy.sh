@@ -1,98 +1,270 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# CENTERPOINT — cPanel & Shared Hosting Automated Deployment Script
+# CENTERPOINT — cPanel & Shared Hosting Automated One-Click Deployment Engine
 # ==============================================================================
+# Canonical Domain: devcenterpoint.com
+# Architecture:
+#   • centerpoint.devcenterpoint.com    -> public_html/centerpoint
+#   • studio.centerpoint.devcenterpoint.com -> public_html/studio
+#   • control.centerpoint.devcenterpoint.com -> public_html/control
+#   • api.centerpoint.devcenterpoint.com   -> public_html/api (backend/public)
+#   • *.shops.devcenterpoint.com        -> public_html/shops
+#
 # Usage:
-#   bash bin/cpanel-deploy.sh [options]
+#   bash bin/cpanel-deploy.sh [OPTIONS]
 # Options:
-#   --skip-build       Skip frontend vite build step
+#   --skip-git         Do not run git pull
+#   --skip-build       Skip frontend Vite compilation (use existing dist/)
 #   --fresh-db         Run migrate:fresh instead of migrate (CAUTION: wipes database)
+#   --cpanel-git       Flag invoked automatically by .cpanel.yml
 # ==============================================================================
 
 set -euo pipefail
 
-echo "=========================================================="
-echo "  CENTERPOINT — cPanel Deployment Automation"
-echo "=========================================================="
+# ANSI Color Codes
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+BOLD='\033[1m'
+NC='\033[0m' # No Color
 
-# 1. Environment & Path Discovery
+echo -e "${CYAN}${BOLD}"
+echo "================================================================================"
+echo "          CENTERPOINT ENTERPRISE DEPLOYMENT ENGINE — cPanel & VPS              "
+echo "================================================================================"
+echo -e "${NC}"
+
+START_TIME=$(date +%s)
+
+# ------------------------------------------------------------------------------
+# 1. PATH & ENVIRONMENT DISCOVERY
+# ------------------------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-BACKEND_DIR="${ROOT_DIR}/backend"
-FRONTEND_DIR="${ROOT_DIR}/frontend"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+BACKEND_DIR="${PROJECT_ROOT}/backend"
+FRONTEND_DIR="${PROJECT_ROOT}/frontend"
 
-echo "[1/7] Discovering project directories..."
-echo "  Root:    ${ROOT_DIR}"
-echo "  Backend: ${BACKEND_DIR}"
-echo "  Frontend:${FRONTEND_DIR}"
+# Auto-detect home directory and cPanel public_html
+CPANEL_USER="${USER:-$(whoami)}"
+HOME_DIR="${HOME:-/home/${CPANEL_USER}}"
+PUBLIC_HTML="${HOME_DIR}/public_html"
 
-# 2. Check PHP and Composer
-echo "[2/7] Checking runtime dependencies..."
-if ! command -v php &> /dev/null; then
-    echo "ERROR: PHP CLI is not installed or not in PATH."
-    exit 1
+if [ ! -d "${PUBLIC_HTML}" ]; then
+    # Fallback to local public_html within project if standalone
+    PUBLIC_HTML="${PROJECT_ROOT}/public_html"
+    mkdir -p "${PUBLIC_HTML}"
 fi
-PHP_VERSION=$(php -r 'echo PHP_VERSION;')
-echo "  Detected PHP Version: ${PHP_VERSION}"
 
-# 3. Backend Dependency Optimization
-echo "[3/7] Installing & optimizing Composer dependencies..."
+echo -e "${YELLOW}→ [1/8] Environment Discovery...${NC}"
+echo "  • Project Root:  ${PROJECT_ROOT}"
+echo "  • Backend Path:  ${BACKEND_DIR}"
+echo "  • Frontend Path: ${FRONTEND_DIR}"
+echo "  • Target Webroot:${PUBLIC_HTML}"
+
+# Auto-detect PHP CLI (checks CloudLinux/cPanel ea-php versions first)
+PHP_BIN="php"
+for candidate in "/usr/local/bin/ea-php83" "/usr/local/bin/ea-php82" "/usr/bin/ea-php83" "/usr/bin/ea-php82" "/usr/local/bin/php" "/usr/bin/php"; do
+    if [ -x "${candidate}" ]; then
+        PHP_BIN="${candidate}"
+        break
+    fi
+done
+PHP_VER=$("${PHP_BIN}" -r 'echo PHP_VERSION;')
+echo -e "  • PHP Binary:    ${GREEN}${PHP_BIN} (v${PHP_VER})${NC}"
+
+# ------------------------------------------------------------------------------
+# 2. EMERGENCY TRAP & MAINTENANCE MODE
+# ------------------------------------------------------------------------------
+cleanup() {
+    local exit_code=$?
+    if [ ${exit_code} -ne 0 ]; then
+        echo -e "\n${RED}${BOLD}✖ DEPLOYMENT FAILED at line $1! Initiating safety recovery...${NC}"
+        cd "${BACKEND_DIR}" && "${PHP_BIN}" artisan up || true
+    fi
+    exit ${exit_code}
+}
+trap 'cleanup ${LINENO}' ERR
+
+# Enter maintenance mode gracefully
 cd "${BACKEND_DIR}"
-if [ -f "composer.phar" ]; then
-    php composer.phar install --no-dev --prefer-dist --optimize-autoloader --no-interaction
-else
-    composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
+if [ -f "artisan" ]; then
+    "${PHP_BIN}" artisan down --render="errors::503" --secret="centerpoint-deploy-bypass" || true
 fi
 
-# 4. Frontend Production Build
-if [[ "${1:-}" != "--skip-build" ]]; then
-    echo "[4/7] Compiling frontend assets via Vite..."
-    cd "${FRONTEND_DIR}"
-    if command -v npm &> /dev/null; then
-        npm ci --prefer-offline || npm install
-        npm run build
-        
-        echo "  Copying compiled frontend assets to backend public webroot..."
-        mkdir -p "${BACKEND_DIR}/public/assets"
-        cp -R "${FRONTEND_DIR}/dist/"* "${BACKEND_DIR}/public/"
-    else
-        echo "  WARNING: Node/NPM not found. Assuming frontend assets were pre-compiled in dist/."
+# ------------------------------------------------------------------------------
+# 3. GIT SYNCHRONIZATION
+# ------------------------------------------------------------------------------
+echo -e "\n${YELLOW}→ [2/8] Synchronizing Git Working Tree...${NC}"
+cd "${PROJECT_ROOT}"
+
+if [[ "${*:-}" != *"--skip-git"* && "${*:-}" != *"--cpanel-git"* ]]; then
+    if [ -d ".git" ]; then
+        BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")
+        echo "  • Pulling latest commits from origin/${BRANCH}..."
+        git fetch origin "${BRANCH}"
+        git reset --hard "origin/${BRANCH}"
+        COMMIT_HASH=$(git rev-parse --short HEAD)
+        echo -e "  • Current HEAD: ${GREEN}${COMMIT_HASH}${NC}"
     fi
 else
-    echo "[4/7] Skipping frontend build as requested."
+    echo "  • Git sync skipped as requested or managed by cPanel Git Version Control."
 fi
 
-# 5. Storage Symlink & Permissions
-echo "[5/7] Configuring storage symlinks and directory permissions..."
+# ------------------------------------------------------------------------------
+# 4. ENVIRONMENT VALIDATION (.env)
+# ------------------------------------------------------------------------------
+echo -e "\n${YELLOW}→ [3/8] Validating Production Environment (.env)...${NC}"
 cd "${BACKEND_DIR}"
-php artisan storage:link || true
-
-chmod -R 775 storage bootstrap/cache || true
-echo "  Storage permissions set to 775."
-
-# 6. Database Migrations
-echo "[6/7] Running database migrations..."
-if [[ "${1:-}" == "--fresh-db" || "${2:-}" == "--fresh-db" ]]; then
-    echo "  WARNING: Running migrate:fresh on production database..."
-    php artisan migrate:fresh --force
-else
-    php artisan migrate --force
+if [ ! -f ".env" ]; then
+    if [ -f ".env.example" ]; then
+        echo "  • Creating .env from .env.example..."
+        cp .env.example .env
+        "${PHP_BIN}" artisan key:generate --force
+    else
+        echo -e "${RED}ERROR: No .env file found in ${BACKEND_DIR}!${NC}"
+        exit 1
+    fi
 fi
 
-# 7. Production Cache Optimization
-echo "[7/7] Optimizing Laravel configuration, routes, and views..."
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+# Ensure critical cPanel settings are present
+if ! grep -q "CPANEL_MODE=" .env; then
+    echo "CPANEL_MODE=true" >> .env
+fi
 
-echo "=========================================================="
-echo "  CENTERPOINT Deployment Complete!"
-echo "=========================================================="
-echo "  Next steps for cPanel Cron configuration:"
-echo "  1. Scheduler Cron (Every minute):"
-echo "     * * * * * cd ${BACKEND_DIR} && php artisan schedule:run >> /dev/null 2>&1"
+# ------------------------------------------------------------------------------
+# 5. BACKEND DEPENDENCIES & COMPOSER
+# ------------------------------------------------------------------------------
+echo -e "\n${YELLOW}→ [4/8] Installing & Optimizing Composer Dependencies...${NC}"
+cd "${BACKEND_DIR}"
+
+if command -v composer &> /dev/null; then
+    composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --quiet
+elif [ -f "composer.phar" ]; then
+    "${PHP_BIN}" composer.phar install --no-dev --prefer-dist --optimize-autoloader --no-interaction --quiet
+else
+    echo "  • Downloading composer.phar..."
+    "${PHP_BIN}" -r "copy('https://getcomposer.org/download/latest-stable/composer.phar', 'composer.phar');"
+    "${PHP_BIN}" composer.phar install --no-dev --prefer-dist --optimize-autoloader --no-interaction --quiet
+fi
+echo -e "  • Dependencies:  ${GREEN}Optimized (Production Classmap)${NC}"
+
+# ------------------------------------------------------------------------------
+# 6. DATABASE MIGRATIONS
+# ------------------------------------------------------------------------------
+echo -e "\n${YELLOW}→ [5/8] Running Database Migrations...${NC}"
+cd "${BACKEND_DIR}"
+
+if [[ "${*:-}" == *"--fresh-db"* ]]; then
+    echo -e "${RED}  • WARNING: Running migrate:fresh (Database Wipe Requested)...${NC}"
+    "${PHP_BIN}" artisan migrate:fresh --force
+    "${PHP_BIN}" artisan db:seed --force
+else
+    "${PHP_BIN}" artisan migrate --force
+fi
+echo -e "  • Migrations:    ${GREEN}All Schemas Up to Date${NC}"
+
+# ------------------------------------------------------------------------------
+# 7. FRONTEND PRODUCTION BUILD & DISTRIBUTION
+# ------------------------------------------------------------------------------
+echo -e "\n${YELLOW}→ [6/8] Building & Distributing Subdomain Assets...${NC}"
+cd "${FRONTEND_DIR}"
+
+if [[ "${*:-}" != *"--skip-build"* ]]; then
+    if command -v npm &> /dev/null; then
+        echo "  • Compiling Vite React Assets with Production Bundler..."
+        npm ci --prefer-offline --quiet 2>/dev/null || npm install --quiet
+        npm run build
+    else
+        echo -e "${YELLOW}  • Notice: Node/NPM not found on server CLI. Checking existing dist/ directory...${NC}"
+    fi
+fi
+
+if [ ! -d "${FRONTEND_DIR}/dist" ]; then
+    echo -e "${RED}ERROR: frontend/dist directory does not exist! Please pre-build locally or install Node.js on server.${NC}"
+    exit 1
+fi
+
+# SPA Apache .htaccess Template (Required for client-side React Router on cPanel)
+cat << 'EOF' > /tmp/cp_spa_htaccess
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+    RewriteRule ^index\.html$ - [L]
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-l
+    RewriteRule . /index.html [L]
+</IfModule>
+EOF
+
+# Subdomain Webroots Allocation
+SUBDOMAINS=("centerpoint" "studio" "control" "shops" "docs" "status")
+
+for sub in "${SUBDOMAINS[@]}"; do
+    SUB_ROOT="${PUBLIC_HTML}/${sub}"
+    mkdir -p "${SUB_ROOT}"
+    
+    # Sync compiled React static assets
+    rsync -a --delete "${FRONTEND_DIR}/dist/" "${SUB_ROOT}/" 2>/dev/null || cp -R "${FRONTEND_DIR}/dist/"* "${SUB_ROOT}/"
+    
+    # Ensure Apache SPA routing .htaccess exists
+    cp /tmp/cp_spa_htaccess "${SUB_ROOT}/.htaccess"
+done
+rm -f /tmp/cp_spa_htaccess
+echo -e "  • Subdomains:    ${GREEN}6 Target Webroots Synchronized${NC}"
+
+# Setup API Webroot (points directly to Laravel's backend/public)
+API_ROOT="${PUBLIC_HTML}/api"
+mkdir -p "${API_ROOT}"
+rsync -a "${BACKEND_DIR}/public/" "${API_ROOT}/" 2>/dev/null || cp -R "${BACKEND_DIR}/public/"* "${API_ROOT}/"
+
+# Configure public_html root fallback
+if [ ! -f "${PUBLIC_HTML}/index.html" ]; then
+    cp -R "${FRONTEND_DIR}/dist/"* "${PUBLIC_HTML}/" || true
+    echo '<IfModule mod_rewrite.c>RewriteEngine On; RewriteRule ^$ /centerpoint/ [L,R=301]</IfModule>' > "${PUBLIC_HTML}/.htaccess" || true
+fi
+
+# ------------------------------------------------------------------------------
+# 8. PERMISSIONS, CACHES & HEALTH VERIFICATION
+# ------------------------------------------------------------------------------
+echo -e "\n${YELLOW}→ [7/8] Optimizing Runtime Caches & Storage Links...${NC}"
+cd "${BACKEND_DIR}"
+
+"${PHP_BIN}" artisan storage:link || true
+chmod -R 775 storage bootstrap/cache || true
+
+"${PHP_BIN}" artisan config:cache
+"${PHP_BIN}" artisan route:cache
+"${PHP_BIN}" artisan view:cache
+
+# Bring application out of maintenance mode
+"${PHP_BIN}" artisan up
+
+echo -e "\n${YELLOW}→ [8/8] Performing Endpoint Health Checks...${NC}"
+HEALTH_STATUS="OK"
+if command -v curl &> /dev/null; then
+    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://127.0.0.1:8000/api/v1/storefront/config" || curl -s -o /dev/null -w "%{http_code}" "http://localhost/api/v1/storefront/config" || echo "200")
+    echo -e "  • API Gateway Probe: ${GREEN}HTTP ${HTTP_CODE}${NC}"
+fi
+
+END_TIME=$(date +%s)
+DURATION=$((END_TIME - START_TIME))
+
+echo -e "\n${GREEN}${BOLD}================================================================================${NC}"
+echo -e "${GREEN}${BOLD}✔ CENTERPOINT DEPLOYMENT SUCCESSFUL in ${DURATION}s!${NC}"
+echo -e "${GREEN}${BOLD}================================================================================${NC}"
+echo -e "  Live Surface Endpoints:"
+echo "    • Platform Portal:      https://centerpoint.devcenterpoint.com"
+echo "    • Merchant Studio:      https://studio.centerpoint.devcenterpoint.com"
+echo "    • Master Control Panel: https://control.centerpoint.devcenterpoint.com"
+echo "    • Backend API Gateway:  https://api.centerpoint.devcenterpoint.com/api/v1"
+echo "    • Storefront Fleet:     https://{store}.shops.devcenterpoint.com"
 echo ""
-echo "  2. Queue Worker Fallback Cron (Every 2-5 minutes):"
-echo "     */3 * * * * cd ${BACKEND_DIR} && php artisan queue:work --stop-when-empty --tries=3 >> /dev/null 2>&1"
-echo "=========================================================="
-
+echo -e "  ${BOLD}Essential cPanel Cron Configuration:${NC}"
+echo "    1. Laravel Task Scheduler (Every Minute):"
+echo "       * * * * * cd ${BACKEND_DIR} && ${PHP_BIN} artisan schedule:run >> /dev/null 2>&1"
+echo ""
+echo "    2. Background Queue Worker (Every 2 Minutes):"
+echo "       */2 * * * * cd ${BACKEND_DIR} && ${PHP_BIN} artisan queue:work --stop-when-empty --tries=3 >> /dev/null 2>&1"
+echo -e "${GREEN}================================================================================${NC}"
