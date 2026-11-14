@@ -165,14 +165,16 @@ cd "${BACKEND_DIR}"
 if [[ "${*:-}" == *"--fresh-db"* ]]; then
     echo -e "${RED}  • WARNING: Running migrate:fresh (Database Wipe Requested)...${NC}"
     "${PHP_BIN}" artisan migrate:fresh --force
-    "${PHP_BIN}" artisan db:seed --force
+    "${PHP_BIN}" artisan migrate --path=database/migrations/central --force
+    "${PHP_BIN}" artisan db:seed --class="Database\\Seeders\\ProductionSeeder" --force
 else
     "${PHP_BIN}" artisan migrate --force
-    echo -e "  • Migrations:    ${GREEN}All Schemas Up to Date${NC}"
+    "${PHP_BIN}" artisan migrate --path=database/migrations/central --force
+    echo -e "  • Migrations:    ${GREEN}All Schemas Up to Date (Tenant & Central)${NC}"
     
     echo "  • Running Production Database Seeder..."
     "${PHP_BIN}" artisan db:seed --class="Database\\Seeders\\ProductionSeeder" --force
-    echo -e "  • Seeds:         ${GREEN}Administrative Users, Roles & Ledger Verified${NC}"
+    echo -e "  • Seeds:         ${GREEN}Staff, MCP Operators, Roles & Ledger Verified${NC}"
 fi
 
 # ------------------------------------------------------------------------------

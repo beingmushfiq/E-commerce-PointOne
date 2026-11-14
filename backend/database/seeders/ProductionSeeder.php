@@ -50,8 +50,8 @@ class ProductionSeeder extends Seeder
             }
         }
 
-        // 3. Administrative Accounts Setup
-        $superadmin = User::firstOrCreate(
+        // 3. Administrative Accounts Setup (Idempotent updateOrCreate)
+        $superadmin = User::updateOrCreate(
             ['email' => 'superadmin@centerpoint.com'],
             ['name' => 'Platform Superadmin', 'password' => Hash::make('password123')]
         );
@@ -59,7 +59,7 @@ class ProductionSeeder extends Seeder
             $superadmin->assignRole($adminRole);
         }
 
-        $admin = User::firstOrCreate(
+        $admin = User::updateOrCreate(
             ['email' => 'admin@centerpoint.com'],
             ['name' => 'Store Administrator', 'password' => Hash::make('password123')]
         );
@@ -67,7 +67,7 @@ class ProductionSeeder extends Seeder
             $admin->assignRole($adminRole);
         }
 
-        $merchant = User::firstOrCreate(
+        $merchant = User::updateOrCreate(
             ['email' => 'merchant@centerpoint.atelier'],
             ['name' => 'Atelier Store Manager', 'password' => Hash::make('password123')]
         );
@@ -75,12 +75,69 @@ class ProductionSeeder extends Seeder
             $merchant->assignRole($adminRole);
         }
 
-        $customer = User::firstOrCreate(
+        $customer = User::updateOrCreate(
             ['email' => 'customer@centerpoint.com'],
             ['name' => 'Alexander Wright', 'password' => Hash::make('password123')]
         );
         if (!$customer->hasRole('customer')) {
             $customer->assignRole($customerRole);
+        }
+
+        // 3b. SaaS Master Control Panel Platform Administrators (Central Database)
+        try {
+            if (\Illuminate\Support\Facades\Schema::connection('central')->hasTable('platform_admins')) {
+                \App\Models\Central\PlatformAdmin::updateOrCreate(
+                    ['email' => 'superadmin@centerpoint.com'],
+                    [
+                        'name' => 'Platform Superadmin',
+                        'password' => Hash::make('password123'),
+                        'is_super_admin' => true,
+                        'is_active' => true,
+                    ]
+                );
+            }
+        } catch (\Throwable) {
+            // Handled gracefully in standalone single-database installations
+        }
+
+        // 3c. SaaS Central Subscription Plans (Starter, Professional, Enterprise)
+        try {
+            if (\Illuminate\Support\Facades\Schema::connection('central')->hasTable('plans')) {
+                $plans = [
+                    [
+                        'name' => 'Starter Launch',
+                        'slug' => 'starter',
+                        'price' => 2900.00,
+                        'billing_period' => 'monthly',
+                        'features_json' => ['custom_domain' => true, 'analytics' => true, 'api_access' => false],
+                        'limits_json' => ['max_products' => 500, 'max_staff' => 3, 'storage_mb' => 2048],
+                        'is_active' => true,
+                    ],
+                    [
+                        'name' => 'Professional Growth',
+                        'slug' => 'pro',
+                        'price' => 7900.00,
+                        'billing_period' => 'monthly',
+                        'features_json' => ['custom_domain' => true, 'analytics' => true, 'api_access' => true, 'double_entry_ledger' => true],
+                        'limits_json' => ['max_products' => 5000, 'max_staff' => 15, 'storage_mb' => 10240],
+                        'is_active' => true,
+                    ],
+                    [
+                        'name' => 'Enterprise Sovereign',
+                        'slug' => 'enterprise',
+                        'price' => 19900.00,
+                        'billing_period' => 'monthly',
+                        'features_json' => ['custom_domain' => true, 'analytics' => true, 'api_access' => true, 'double_entry_ledger' => true, 'white_label' => true, 'dedicated_support' => true],
+                        'limits_json' => ['max_products' => 100000, 'max_staff' => 100, 'storage_mb' => 102400],
+                        'is_active' => true,
+                    ],
+                ];
+                foreach ($plans as $p) {
+                    \App\Models\Central\Plan::updateOrCreate(['slug' => $p['slug']], $p);
+                }
+            }
+        } catch (\Throwable) {
+            // Handled gracefully in standalone single-database installations
         }
 
         // 4. Double-Entry Accounting Chart of Accounts
