@@ -44,23 +44,17 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 BACKEND_DIR="${PROJECT_ROOT}/backend"
 FRONTEND_DIR="${PROJECT_ROOT}/frontend"
+WEBROOTS_DIR="${PROJECT_ROOT}/webroots"
 
-# Auto-detect home directory and cPanel public_html
-CPANEL_USER="${USER:-$(whoami)}"
-HOME_DIR="${HOME:-/home/${CPANEL_USER}}"
-PUBLIC_HTML="${CPANEL_PUBLIC_HTML:-${HOME_DIR}/public_html}"
-
-if [ ! -d "${PUBLIC_HTML}" ]; then
-    # Fallback to local public_html within project if standalone
-    PUBLIC_HTML="${PROJECT_ROOT}/public_html"
-    mkdir -p "${PUBLIC_HTML}"
-fi
+# Ensure isolated webroots directory exists inside project root (NEVER touch public_html)
+mkdir -p "${WEBROOTS_DIR}"
 
 echo -e "${YELLOW}→ [1/8] Environment Discovery...${NC}"
 echo "  • Project Root:  ${PROJECT_ROOT}"
 echo "  • Backend Path:  ${BACKEND_DIR}"
 echo "  • Frontend Path: ${FRONTEND_DIR}"
-echo "  • Target Webroot:${PUBLIC_HTML}"
+echo "  • SPA Webroots:  ${WEBROOTS_DIR}"
+echo "  • API Gateway:   ${BACKEND_DIR}/public"
 
 # Auto-detect PHP CLI (checks CloudLinux/cPanel ea-php versions first)
 PHP_BIN="php"
@@ -201,11 +195,11 @@ cat << 'EOF' > /tmp/cp_spa_htaccess
 </IfModule>
 EOF
 
-# Subdomain Webroots Allocation
+# Subdomain Webroots Allocation (inside CenterPoint-Ecommerce/webroots/ — NEVER public_html)
 SUBDOMAINS=("centerpoint" "studio" "control" "shops" "docs" "status")
 
 for sub in "${SUBDOMAINS[@]}"; do
-    SUB_ROOT="${PUBLIC_HTML}/${sub}"
+    SUB_ROOT="${WEBROOTS_DIR}/${sub}"
     mkdir -p "${SUB_ROOT}"
     
     # Sync compiled React static assets
@@ -215,51 +209,8 @@ for sub in "${SUBDOMAINS[@]}"; do
     cp /tmp/cp_spa_htaccess "${SUB_ROOT}/.htaccess"
 done
 rm -f /tmp/cp_spa_htaccess
-echo -e "  • Subdomains:    ${GREEN}6 Target Webroots Synchronized${NC}"
-
-# Setup API Webroot (points directly to Laravel's backend/public)
-API_ROOT="${PUBLIC_HTML}/api"
-mkdir -p "${API_ROOT}"
-
-# Copy .htaccess and public assets from backend/public
-rsync -a --exclude="index.php" "${BACKEND_DIR}/public/" "${API_ROOT}/" 2>/dev/null || cp -R "${BACKEND_DIR}/public/"* "${API_ROOT}/"
-
-# Write resilient bridge index.php for API entrypoint pointing directly to backend
-cat << EOF > "${API_ROOT}/index.php"
-<?php
-
-use Illuminate\Foundation\Application;
-use Illuminate\Http\Request;
-
-define('LARAVEL_START', microtime(true));
-
-\$backendDir = '${BACKEND_DIR}';
-
-// Determine if the application is in maintenance mode...
-if (file_exists(\$maintenance = \$backendDir . '/storage/framework/maintenance.php')) {
-    require \$maintenance;
-}
-
-// Register Composer autoloader...
-require \$backendDir . '/vendor/autoload.php';
-
-// Bootstrap Laravel and handle request...
-/** @var Application \$app */
-\$app = require_once \$backendDir . '/bootstrap/app.php';
-
-\$app->handleRequest(Request::capture());
-EOF
-
-# Ensure storage symlink exists inside API webroot
-if [ ! -L "${API_ROOT}/storage" ] && [ ! -d "${API_ROOT}/storage" ]; then
-    ln -s "${BACKEND_DIR}/storage/app/public" "${API_ROOT}/storage" 2>/dev/null || true
-fi
-
-# Configure public_html root fallback
-if [ ! -f "${PUBLIC_HTML}/index.html" ]; then
-    cp -R "${FRONTEND_DIR}/dist/"* "${PUBLIC_HTML}/" || true
-    echo '<IfModule mod_rewrite.c>RewriteEngine On; RewriteRule ^$ /centerpoint/ [L,R=301]</IfModule>' > "${PUBLIC_HTML}/.htaccess" || true
-fi
+echo -e "  • Subdomains:    ${GREEN}6 Target Webroots Synchronized in ${WEBROOTS_DIR}${NC}"
+echo -e "  • API Gateway:   ${GREEN}Direct native execution from ${BACKEND_DIR}/public${NC}"
 
 # ------------------------------------------------------------------------------
 # 8. PERMISSIONS, CACHES & HEALTH VERIFICATION
