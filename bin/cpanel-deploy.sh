@@ -168,6 +168,12 @@ if [[ "${*:-}" == *"--fresh-db"* ]]; then
     "${PHP_BIN}" artisan db:seed --force
 else
     "${PHP_BIN}" artisan migrate --force
+    # Automatically seed initial administrative accounts if users table is empty
+    USER_COUNT=$("${PHP_BIN}" artisan tinker --execute="echo \App\Models\User::count();" 2>/dev/null || echo "0")
+    if [ "${USER_COUNT}" = "0" ]; then
+        echo "  • Seeding initial administrative accounts and catalog defaults..."
+        "${PHP_BIN}" artisan db:seed --force
+    fi
 fi
 echo -e "  • Migrations:    ${GREEN}All Schemas Up to Date${NC}"
 

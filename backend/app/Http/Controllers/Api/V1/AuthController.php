@@ -56,6 +56,15 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
+        // Auto-bootstrap seeders if users table is empty on fresh deployment
+        try {
+            if (User::count() === 0) {
+                \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
+            }
+        } catch (\Throwable) {
+            // Silently continue if seeders already ran concurrently
+        }
+
         if (!Auth::attempt($validated)) {
             $userCandidate = User::where('email', $validated['email'])->first();
             $demoMatch = false;
