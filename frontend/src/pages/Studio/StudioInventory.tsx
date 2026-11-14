@@ -1,22 +1,47 @@
 import React, { useState } from 'react';
 import { Warehouse, ArrowRightLeft } from 'lucide-react';
 import { Badge } from '../../components/DesignSystem';
+import { useStudioInventory } from '../../hooks/useStudio';
 
 export const StudioInventory: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'stocks' | 'warehouses' | 'movements'>('stocks');
+  const { data: inventoryData } = useStudioInventory();
 
-  const warehouses = [
+  const fallbackWarehouses = [
     { id: 'wh-1', name: 'Banani Central Vault', location: 'Banani, Dhaka', capacity: '1,200 units', manager: 'Imran Hossain', status: 'Active' },
     { id: 'wh-2', name: 'Gulshan Atelier Boutique', location: 'Gulshan 2, Dhaka', capacity: '450 units', manager: 'Nabila Karim', status: 'Active' },
     { id: 'wh-3', name: 'Chittagong Port Hub', location: 'Agrabad, Chittagong', capacity: '2,500 units', manager: 'Rafiqul Islam', status: 'Active' },
   ];
 
-  const stocks = [
+  const warehouses = (inventoryData?.warehouses && inventoryData.warehouses.length > 0)
+    ? inventoryData.warehouses.map((w: any) => ({
+        id: `wh-${w.id}`,
+        name: w.name,
+        location: w.address || `${w.city || 'Dhaka'}, Bangladesh`,
+        capacity: `${w.capacity || 'Unlimited'} units`,
+        manager: w.contact_person || 'Vault Custodian',
+        status: w.is_active ? 'Active' : 'Archived',
+      }))
+    : fallbackWarehouses;
+
+  const fallbackStocks = [
     { sku: 'CP-HORO-092', product: 'Royal Tourbillon Complication', warehouse: 'Banani Central Vault', onHand: 18, reserved: 2, available: 16, reorderPoint: 5 },
     { sku: 'CP-HORO-041', product: 'Heritage Chronometer Ingot', warehouse: 'Gulshan Atelier Boutique', onHand: 8, reserved: 1, available: 7, reorderPoint: 4 },
     { sku: 'CP-HORO-108', product: 'Artisanal Grand Calendar Tourbillon', warehouse: 'Banani Central Vault', onHand: 3, reserved: 1, available: 2, reorderPoint: 3 },
     { sku: 'CP-LTHR-012', product: 'Bespoke Alligator Watch Portfolio', warehouse: 'Chittagong Port Hub', onHand: 35, reserved: 0, available: 35, reorderPoint: 10 },
   ];
+
+  const stocks = (inventoryData?.stocks && inventoryData.stocks.length > 0)
+    ? inventoryData.stocks.map((s: any) => ({
+        sku: s.product?.sku || s.sku || 'CP-SKU',
+        product: s.product?.name || 'Artisanal Product',
+        warehouse: s.warehouse?.name || 'Banani Central Vault',
+        onHand: s.quantity || 0,
+        reserved: s.reserved_quantity || 0,
+        available: Math.max(0, (s.quantity || 0) - (s.reserved_quantity || 0)),
+        reorderPoint: s.low_stock_threshold || 5,
+      }))
+    : fallbackStocks;
 
   const movements = [
     { id: 'MOV-1029', sku: 'CP-HORO-092', type: 'Transfer', from: 'Chittagong Port Hub', to: 'Banani Central Vault', qty: 5, date: '14 Nov 2026, 03:00 PM', operator: 'Imran Hossain' },
@@ -98,7 +123,7 @@ export const StudioInventory: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/80">
-              {stocks.map((stk) => (
+              {stocks.map((stk: any) => (
                 <tr key={stk.sku} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition">
                   <td className="p-4">
                     <span className="font-semibold text-zinc-900 dark:text-white font-sans text-xs block">
@@ -125,7 +150,7 @@ export const StudioInventory: React.FC = () => {
       {/* Tab 2: Warehouses */}
       {activeTab === 'warehouses' && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {warehouses.map((wh) => (
+          {warehouses.map((wh: any) => (
             <div
               key={wh.id}
               className="p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-4 shadow-sm"

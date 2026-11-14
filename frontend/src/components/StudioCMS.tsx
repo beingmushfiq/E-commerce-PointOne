@@ -71,7 +71,7 @@ export const StudioCMS: React.FC<StudioCMSProps> = ({
     category_id: '',
     summary: '',
     description: '',
-    image_url: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=800&q=80',
+    image_url: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&q=80',
     is_featured: false,
   });
 
@@ -215,7 +215,7 @@ export const StudioCMS: React.FC<StudioCMSProps> = ({
         category_id: '',
         summary: '',
         description: '',
-        image_url: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=800&q=80',
+        image_url: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&q=80',
         is_featured: false,
       });
       showFeedback('Product successfully added to catalog');
@@ -439,7 +439,7 @@ export const StudioCMS: React.FC<StudioCMSProps> = ({
               />
             </div>
 
-            <EditorialButton variant="primary" size="lg" className="w-full mt-2 cursor-pointer" type="submit">
+            <EditorialButton variant="amber" size="lg" className="w-full mt-2 cursor-pointer font-bold" type="submit">
               Sign In to Admin Studio
             </EditorialButton>
           </form>

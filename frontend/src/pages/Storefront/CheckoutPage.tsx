@@ -62,14 +62,23 @@ export const CheckoutPage: React.FC = () => {
 
   const handleCheckoutSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const payloadAddress = {
+      ...shippingAddress,
+      city: shippingAddress.thana || shippingAddress.district || 'Dhaka',
+      country: 'Bangladesh',
+    };
     processCheckoutMutation.mutate(
       {
         payment_method: paymentMethod,
-        shipping_address: shippingAddress,
+        shipping_address: payloadAddress,
       },
       {
-        onSuccess: (data) => {
-          setConfirmedOrder(data.order || { id: 'CP-ORD-9821', status: 'verified', total: grandTotal });
+        onSuccess: (data: any) => {
+          setConfirmedOrder(data?.order || { order_number: 'ORD-' + Date.now().toString().slice(-6), status: 'verified', total: grandTotal });
+        },
+        onError: (err: any) => {
+          const msg = err?.response?.data?.message || 'Transaction could not be settled. Please check address and inventory.';
+          alert(msg);
         },
       }
     );
@@ -368,8 +377,8 @@ export const CheckoutPage: React.FC = () => {
             <EditorialButton
               type="submit"
               size="lg"
-              variant="primary"
-              className="w-full bg-amber-500 text-zinc-950 hover:bg-amber-400 shadow-lg"
+              variant="amber"
+              className="w-full shadow-lg font-bold"
               disabled={processCheckoutMutation.isPending}
             >
               {processCheckoutMutation.isPending ? 'Verifying with Bank...' : `Confirm Order (${formatPrice(grandTotal)})`}

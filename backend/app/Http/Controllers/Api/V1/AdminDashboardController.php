@@ -126,4 +126,84 @@ class AdminDashboardController extends Controller
             ],
         ]);
     }
+
+    // Get Store Operational Settings for Store Studio
+    public function storeSettings(): JsonResponse
+    {
+        $siteName = \App\Models\StorefrontSetting::where('key', 'brand.site_name')->first()?->getParsedValue() ?? 'CENTERPOINT Flagship Store';
+        $supportEmail = \App\Models\StorefrontSetting::where('key', 'contact.support_email')->first()?->getParsedValue() ?? 'concierge@centerpoint.atelier';
+        $supportPhone = \App\Models\StorefrontSetting::where('key', 'contact.support_phone')->first()?->getParsedValue() ?? '+880 1712-345678';
+        $vatRate = \App\Models\StorefrontSetting::where('key', 'finance.vat_rate')->first()?->getParsedValue() ?? 5;
+        $lowStock = \App\Models\StorefrontSetting::where('key', 'inventory.low_stock_threshold')->first()?->getParsedValue() ?? 5;
+
+        $team = User::with('roles')->get()->map(fn($u) => [
+            'id'     => $u->id,
+            'name'   => $u->name,
+            'email'  => $u->email,
+            'role'   => $u->roles->first()?->name ?? 'Staff',
+            'status' => 'Active',
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => [
+                'storeName'        => $siteName,
+                'supportEmail'     => $supportEmail,
+                'supportPhone'     => $supportPhone,
+                'vatRate'          => (int) $vatRate,
+                'lowStockThreshold'=> (int) $lowStock,
+                'team'             => $team,
+            ],
+        ]);
+    }
+
+    // Update Store Operational Settings for Store Studio
+    public function updateStoreSettings(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'storeName'        => 'nullable|string|max:255',
+            'supportEmail'     => 'nullable|email|max:255',
+            'supportPhone'     => 'nullable|string|max:50',
+            'vatRate'          => 'nullable|numeric|min:0|max:100',
+            'lowStockThreshold'=> 'nullable|integer|min:1',
+        ]);
+
+        if (isset($validated['storeName'])) {
+            \App\Models\StorefrontSetting::updateOrCreate(
+                ['key' => 'brand.site_name'],
+                ['group' => 'brand', 'value' => $validated['storeName'], 'type' => 'string', 'is_secret' => false]
+            );
+        }
+        if (isset($validated['supportEmail'])) {
+            \App\Models\StorefrontSetting::updateOrCreate(
+                ['key' => 'contact.support_email'],
+                ['group' => 'contact', 'value' => $validated['supportEmail'], 'type' => 'string', 'is_secret' => false]
+            );
+        }
+        if (isset($validated['supportPhone'])) {
+            \App\Models\StorefrontSetting::updateOrCreate(
+                ['key' => 'contact.support_phone'],
+                ['group' => 'contact', 'value' => $validated['supportPhone'], 'type' => 'string', 'is_secret' => false]
+            );
+        }
+        if (isset($validated['vatRate'])) {
+            \App\Models\StorefrontSetting::updateOrCreate(
+                ['key' => 'finance.vat_rate'],
+                ['group' => 'finance', 'value' => (string) $validated['vatRate'], 'type' => 'integer', 'is_secret' => false]
+            );
+        }
+        if (isset($validated['lowStockThreshold'])) {
+            \App\Models\StorefrontSetting::updateOrCreate(
+                ['key' => 'inventory.low_stock_threshold'],
+                ['group' => 'inventory', 'value' => (string) $validated['lowStockThreshold'], 'type' => 'integer', 'is_secret' => false]
+            );
+        }
+
+        \Illuminate\Support\Facades\Cache::forget('storefront_settings.public');
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Store operational settings updated successfully',
+        ]);
+    }
 }

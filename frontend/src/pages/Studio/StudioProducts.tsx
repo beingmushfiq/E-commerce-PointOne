@@ -28,7 +28,7 @@ export const StudioProducts: React.FC = () => {
     category_id: '',
     summary: '',
     description: '',
-    image_url: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=800',
+    image_url: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800',
     is_featured: false,
   });
 
@@ -103,7 +103,7 @@ export const StudioProducts: React.FC = () => {
               category_id: categoriesList[0]?.id?.toString() || '1',
               summary: '',
               description: '',
-              image_url: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=800',
+              image_url: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800',
               is_featured: false,
             });
             setIsAddModalOpen(true);
@@ -160,7 +160,7 @@ export const StudioProducts: React.FC = () => {
                 <tr key={product.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition">
                   <td className="p-4 flex items-center gap-3">
                     <img
-                      src={product.image_url || 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=60'}
+                      src={product.image_url || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=60'}
                       alt=""
                       className="w-10 h-10 rounded-lg object-cover bg-zinc-100 dark:bg-zinc-800 shrink-0"
                     />

@@ -7,24 +7,25 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { ProductItem } from '../types/ui';
 import { useCurrency } from '../contexts/CurrencyContext';
 import { SpotlightCard } from './SpotlightCard';
+import { cn } from '../utils/cn';
 
 /* -------------------------------------------------------------------------- */
 /* 1. EDITORIAL BUTTON                                                        */
 /* -------------------------------------------------------------------------- */
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'inverted' | 'amber' | 'white' | 'outlineLight';
   size?: 'sm' | 'md' | 'lg';
   icon?: React.ReactNode;
 }
 
-export const EditorialButton: React.FC<ButtonProps> = ({
+export const EditorialButton = React.forwardRef<HTMLButtonElement, ButtonProps>(({
   children,
   variant = 'primary',
   size = 'md',
   icon,
   className = '',
   ...props
-}) => {
+}, ref) => {
   const sizeClasses = {
     sm: 'px-3.5 py-1.5 text-xs',
     md: 'px-5 py-2.5 text-xs font-semibold',
@@ -38,20 +39,36 @@ export const EditorialButton: React.FC<ButtonProps> = ({
       'bg-white text-zinc-900 border border-zinc-200 hover:bg-zinc-50 dark:bg-zinc-900 dark:text-white dark:border-zinc-800 dark:hover:bg-zinc-800 active:scale-95',
     outline:
       'bg-transparent text-zinc-900 border border-zinc-300 hover:border-zinc-900 dark:text-white dark:border-zinc-700 dark:hover:border-amber-400 active:scale-95',
+    outlineLight:
+      'bg-white/10 text-white border border-white/30 hover:border-white hover:bg-white/20 backdrop-blur-sm active:scale-95 shadow-sm',
     ghost:
       'bg-transparent text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-white dark:hover:bg-zinc-800',
+    inverted:
+      'bg-white text-zinc-950 hover:bg-zinc-100 shadow-md active:scale-95 border border-white/20',
+    white:
+      'bg-white text-zinc-950 hover:bg-zinc-100 font-semibold shadow-md active:scale-95 border border-white/20',
+    amber:
+      'bg-amber-500 text-zinc-950 hover:bg-amber-400 font-bold shadow-md hover:shadow-amber-500/20 active:scale-95',
   };
 
   return (
     <button
-      className={`inline-flex items-center justify-center gap-2 rounded-xl transition duration-200 cursor-pointer select-none font-sans ${sizeClasses[size]} ${variantClasses[variant]} ${className}`}
+      ref={ref}
+      className={cn(
+        'inline-flex items-center justify-center gap-2 rounded-xl transition duration-200 cursor-pointer select-none font-sans',
+        sizeClasses[size],
+        variantClasses[variant],
+        className
+      )}
       {...props}
     >
       <span>{children}</span>
       {icon && <span className="shrink-0">{icon}</span>}
     </button>
   );
-};
+});
+
+EditorialButton.displayName = 'EditorialButton';
 
 /* -------------------------------------------------------------------------- */
 /* 2. EDITORIAL PRODUCT CARD                                                  */
@@ -70,7 +87,7 @@ export const EditorialProductCard: React.FC<ProductCardProps> = ({
   const { formatPrice } = useCurrency();
   const [imageError, setImageError] = useState(false);
 
-  const fallbackImage = 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=800&q=80';
+  const fallbackImage = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&q=80';
   const displayImage = !imageError && product.image_url ? product.image_url : fallbackImage;
 
   return (
@@ -226,13 +243,13 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
             </div>
 
             {/* Items List */}
-            <div className="flex-1 overflow-y-auto p-6 divide-y divide-zinc-100 dark:divide-zinc-800/80">
+            <div className="flex-1 overflow-y-auto p-6 divide-y divide-zinc-100 dark:divide-zinc-800/80" data-lenis-prevent>
               {cartItems.length > 0 ? (
                 cartItems.map((item, idx) => (
                   <div key={idx} className="py-4 flex gap-4 first:pt-0 last:pb-0">
                     <div className="w-20 h-20 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 overflow-hidden shrink-0">
                       <img
-                        src={item.product?.image_url || 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=120'}
+                        src={item.product?.image_url || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=120'}
                         alt=""
                         className="w-full h-full object-cover"
                       />
@@ -360,7 +377,7 @@ export const CommandPalette: React.FC<{
               </kbd>
             </div>
 
-            <div className="max-h-80 overflow-y-auto p-2">
+            <div className="max-h-80 overflow-y-auto p-2" data-lenis-prevent>
               {filtered.length > 0 ? (
                 filtered.map((p) => (
                   <div
@@ -373,7 +390,7 @@ export const CommandPalette: React.FC<{
                   >
                     <div className="flex items-center gap-3">
                       <img
-                        src={p.image_url || 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=60'}
+                        src={p.image_url || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=60'}
                         alt=""
                         className="w-10 h-10 rounded-lg object-cover"
                       />
@@ -584,7 +601,8 @@ export const Badge: React.FC<{
   children: React.ReactNode;
   variant?: 'success' | 'warning' | 'danger' | 'info' | 'neutral' | 'accent';
   size?: 'sm' | 'md';
-}> = ({ children, variant = 'neutral', size = 'sm' }) => {
+  className?: string;
+}> = ({ children, variant = 'neutral', size = 'sm', className = '' }) => {
   const styles = {
     success: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800',
     warning: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800',
@@ -600,7 +618,7 @@ export const Badge: React.FC<{
   };
 
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full font-mono font-medium border ${styles[variant]} ${sizes[size]}`}>
+    <span className={cn('inline-flex items-center gap-1.5 rounded-full font-mono font-medium border', styles[variant], sizes[size], className)}>
       {children}
     </span>
   );

@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
 import { Search, MapPin } from 'lucide-react';
 import { EditorialButton, Badge } from '../../components/DesignSystem';
+import api from '../../services/api';
 
 export const OrderTrackingPage: React.FC = () => {
-  const [referenceInput, setReferenceInput] = useState('CP-ORD-9821');
+  const [referenceInput, setReferenceInput] = useState('ORD-TESTTRACK123');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [searchedOrder, setSearchedOrder] = useState<any>({
-    reference: 'CP-ORD-9821',
-    status: 'dispatched',
+    order_number: 'CP-ORD-9821',
+    status: 'shipped',
     courier: 'Steadfast Insured Express',
     tracking_number: 'STF-8829104',
     recipient: 'Mushfiqur Rahman',
-    destination: 'House 42, Road 11, Banani, Dhaka',
+    destination: 'Dhaka, Bangladesh',
     estimated_arrival: 'Tomorrow by 4:00 PM',
     timeline: [
       { title: 'Order Placed & Payment Verified', time: '14 Nov 2026, 10:24 AM', completed: true },
@@ -21,13 +24,23 @@ export const OrderTrackingPage: React.FC = () => {
     ],
   });
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!referenceInput) return;
-    setSearchedOrder({
-      ...searchedOrder,
-      reference: referenceInput.toUpperCase(),
-    });
+    if (!referenceInput.trim()) return;
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await api.get(`/orders/public-track/${encodeURIComponent(referenceInput.trim())}`);
+      if (res.data?.data) {
+        setSearchedOrder(res.data.data);
+      }
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || 'No active consignment found for this reference.';
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -57,10 +70,16 @@ export const OrderTrackingPage: React.FC = () => {
           />
           <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-3.5" />
         </div>
-        <EditorialButton type="submit" variant="primary" size="md">
-          Inspect Order
+        <EditorialButton type="submit" variant="primary" size="md" disabled={loading}>
+          {loading ? 'Inspecting...' : 'Inspect Order'}
         </EditorialButton>
       </form>
+
+      {error && (
+        <div className="max-w-xl mx-auto p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-xs font-mono text-rose-600 dark:text-rose-400 text-center">
+          {error}
+        </div>
+      )}
 
       {/* Tracking Card */}
       {searchedOrder && (
@@ -72,12 +91,12 @@ export const OrderTrackingPage: React.FC = () => {
                 Consignment Reference
               </span>
               <h3 className="font-mono font-bold text-xl text-zinc-900 dark:text-white mt-0.5">
-                #{searchedOrder.reference}
+                #{searchedOrder.order_number || searchedOrder.reference}
               </h3>
             </div>
             <div className="flex items-center gap-3">
               <Badge variant="accent">
-                In Transit
+                {searchedOrder.status ? searchedOrder.status.toUpperCase() : 'IN TRANSIT'}
               </Badge>
               <div className="text-right text-xs font-mono">
                 <span className="text-zinc-400 block text-[10px]">Courier:</span>

@@ -7,19 +7,27 @@ import {
 } from 'lucide-react';
 import { useCurrency } from '../../contexts/CurrencyContext';
 import { Badge } from '../../components/DesignSystem';
+import { useStudioAnalytics } from '../../hooks/useStudio';
+import { useCounterTween } from '../../hooks/useGsapMotion';
 
 export const StudioOverview: React.FC = () => {
   const { formatPrice } = useCurrency();
   const navigate = useNavigate();
+  const { data: analyticsData } = useStudioAnalytics();
 
   const metrics = {
-    netSales: 2485000,
-    totalOrders: 184,
-    avgOrderValue: 13505,
+    netSales: analyticsData?.kpi?.total_sales ?? 2485000,
+    totalOrders: analyticsData?.kpi?.total_orders ?? 184,
+    avgOrderValue: analyticsData?.kpi?.total_orders ? Math.round((analyticsData?.kpi?.total_sales || 2485000) / analyticsData.kpi.total_orders) : 13505,
     unfulfilledOrders: 7,
     lowStockItems: 3,
-    activeCustomers: 412,
+    activeCustomers: analyticsData?.kpi?.total_customers ?? 412,
   };
+
+  const countSalesRef = useCounterTween({ endValue: metrics.netSales, prefix: '৳ ', duration: 1.8 });
+  const countOrdersRef = useCounterTween({ endValue: metrics.totalOrders, duration: 1.4 });
+  const countAovRef = useCounterTween({ endValue: metrics.avgOrderValue, prefix: '৳ ', duration: 1.6 });
+  const countCustRef = useCounterTween({ endValue: metrics.activeCustomers, duration: 1.5 });
 
   const workQueue = [
     { id: 'WQ-1', type: 'order', title: 'Unfulfilled Order #CP-ORD-9821', desc: 'bKash paid • Banani, Dhaka • Ready for Steadfast dispatch', urgency: 'high', link: '/studio/orders' },
@@ -58,7 +66,7 @@ export const StudioOverview: React.FC = () => {
           </Link>
           <button
             onClick={() => navigate('/studio/products')}
-            className="px-4 py-2 rounded-xl bg-zinc-900 hover:bg-black text-white text-xs font-mono font-semibold transition cursor-pointer"
+            className="px-4 py-2 rounded-xl bg-zinc-900 hover:bg-black dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-zinc-300 dark:border-zinc-700 text-white text-xs font-mono font-semibold transition cursor-pointer"
           >
             + Add Product
           </button>
@@ -74,7 +82,7 @@ export const StudioOverview: React.FC = () => {
               <TrendingUp className="w-3.5 h-3.5" />
             </span>
           </div>
-          <div className="font-mono font-bold text-2xl text-zinc-900 dark:text-white">
+          <div ref={countSalesRef} className="font-mono font-bold text-2xl text-zinc-900 dark:text-white">
             {formatPrice(metrics.netSales)}
           </div>
           <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold block">
@@ -89,7 +97,7 @@ export const StudioOverview: React.FC = () => {
               <ShoppingBag className="w-3.5 h-3.5" />
             </span>
           </div>
-          <div className="font-mono font-bold text-2xl text-zinc-900 dark:text-white">
+          <div ref={countOrdersRef} className="font-mono font-bold text-2xl text-zinc-900 dark:text-white">
             {metrics.totalOrders}
           </div>
           <span className="text-[11px] font-mono text-zinc-500">
@@ -104,7 +112,7 @@ export const StudioOverview: React.FC = () => {
               <DollarSign className="w-3.5 h-3.5" />
             </span>
           </div>
-          <div className="font-mono font-bold text-2xl text-zinc-900 dark:text-white">
+          <div ref={countAovRef} className="font-mono font-bold text-2xl text-zinc-900 dark:text-white">
             {formatPrice(metrics.avgOrderValue)}
           </div>
           <span className="text-[11px] font-mono text-amber-600 dark:text-amber-400 font-semibold block">
@@ -119,7 +127,7 @@ export const StudioOverview: React.FC = () => {
               <Users className="w-3.5 h-3.5" />
             </span>
           </div>
-          <div className="font-mono font-bold text-2xl text-zinc-900 dark:text-white">
+          <div ref={countCustRef} className="font-mono font-bold text-2xl text-zinc-900 dark:text-white">
             {metrics.activeCustomers}
           </div>
           <span className="text-[11px] font-mono text-zinc-500">

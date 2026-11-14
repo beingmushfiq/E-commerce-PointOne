@@ -33,7 +33,7 @@ export const ThemeSelector: React.FC = () => {
       accentColor: '#D97706',
       cardRadius: '24px',
       description: 'Generous whitespace, large photographic hero, sophisticated serif titles, and refined understated purchase controls.',
-      thumbnail: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=800',
+      thumbnail: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800',
       isFlagship: true,
     },
     {

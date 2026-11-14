@@ -156,7 +156,7 @@ export const FloatingAiWidget: React.FC<{ onAddToCart?: (product: ProductItem) =
                         >
                           <div className="flex items-center gap-2">
                             <img
-                              src={prod.image_url || 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=100'}
+                              src={prod.image_url || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100'}
                               alt=""
                               className="w-10 h-10 rounded-lg object-cover"
                             />

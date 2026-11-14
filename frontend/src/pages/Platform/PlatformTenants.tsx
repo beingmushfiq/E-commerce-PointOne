@@ -1,16 +1,35 @@
 import React, { useState } from 'react';
 import { Plus, Search } from 'lucide-react';
 import { DestructiveConfirmModal } from '../../components/DesignSystem';
+import { usePlatformTenants, useProvisionTenant, useToggleTenantSuspend } from '../../hooks/usePlatform';
 
 export const PlatformTenants: React.FC = () => {
-  const [tenants, setTenants] = useState([
-    { id: 'TNT-001', name: 'Atelier Horology Flagship', domain: 'store.centerpoint.atelier', plan: 'Enterprise Atelier', status: 'Active', dbName: 'tenant_horology_prod', storage: '14.2 GB / 50 GB', created: '10 Aug 2026' },
-    { id: 'TNT-002', name: 'Maison Silk & Cashmere', domain: 'maison.silk.atelier', plan: 'Growth Tier', status: 'Active', dbName: 'tenant_silk_prod', storage: '4.8 GB / 25 GB', created: '18 Sep 2026' },
-    { id: 'TNT-003', name: 'Precision Audio Studio BD', domain: 'audio.precision.bd', plan: 'Growth Tier', status: 'Trial', dbName: 'tenant_audio_prod', storage: '1.2 GB / 25 GB', created: '01 Nov 2026' },
-    { id: 'TNT-004', name: 'Vogue Leather Goods', domain: 'vogue.leather.com', plan: 'Starter', status: 'Suspended', dbName: 'tenant_vogue_prod', storage: '850 MB / 10 GB', created: '15 Oct 2026' },
-  ]);
-
   const [search, setSearch] = useState('');
+  const { data: serverTenants } = usePlatformTenants({ search });
+  const provisionMutation = useProvisionTenant();
+  const toggleSuspendMutation = useToggleTenantSuspend();
+
+  const fallbackTenants = [
+    { id: 'TNT-001', numericId: 1, name: 'Atelier Horology Flagship', domain: 'store.centerpoint.atelier', plan: 'Enterprise Atelier', status: 'Active', dbName: 'tenant_horology_prod', storage: '14.2 GB / 50 GB', created: '10 Aug 2026' },
+    { id: 'TNT-002', numericId: 2, name: 'Maison Silk & Cashmere', domain: 'maison.silk.atelier', plan: 'Growth Tier', status: 'Active', dbName: 'tenant_silk_prod', storage: '4.8 GB / 25 GB', created: '18 Sep 2026' },
+    { id: 'TNT-003', numericId: 3, name: 'Precision Audio Studio BD', domain: 'audio.precision.bd', plan: 'Growth Tier', status: 'Trial', dbName: 'tenant_audio_prod', storage: '1.2 GB / 25 GB', created: '01 Nov 2026' },
+    { id: 'TNT-004', numericId: 4, name: 'Vogue Leather Goods', domain: 'vogue.leather.com', plan: 'Starter', status: 'Suspended', dbName: 'tenant_vogue_prod', storage: '850 MB / 10 GB', created: '15 Oct 2026' },
+  ];
+
+  const tenants = serverTenants && Array.isArray(serverTenants) && serverTenants.length > 0
+    ? serverTenants.map((t: any) => ({
+        id: `TNT-${t.slug || t.id}`,
+        numericId: t.id,
+        name: t.name,
+        domain: t.domains?.[0]?.domain || `${t.slug || 'store'}.centerpoint.test`,
+        plan: t.active_subscription?.plan?.name || 'Growth Tier',
+        status: t.status === 'active' ? 'Active' : t.status === 'suspended' ? 'Suspended' : 'Trial',
+        dbName: t.database_config?.database_name || `tenant_${t.id}_shard`,
+        storage: '1.2 GB / 25 GB',
+        created: new Date(t.created_at || Date.now()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+      }))
+    : fallbackTenants;
+
   const [suspendingTenant, setSuspendingTenant] = useState<any | null>(null);
   const [isProvisionModalOpen, setIsProvisionModalOpen] = useState(false);
   const [newTenantForm, setNewTenantForm] = useState({
@@ -20,7 +39,7 @@ export const PlatformTenants: React.FC = () => {
     adminEmail: '',
   });
 
-  const filtered = tenants.filter((t) =>
+  const filtered = tenants.filter((t: any) =>
     t.name.toLowerCase().includes(search.toLowerCase()) ||
     t.domain.toLowerCase().includes(search.toLowerCase()) ||
     t.id.toLowerCase().includes(search.toLowerCase())
@@ -28,31 +47,34 @@ export const PlatformTenants: React.FC = () => {
 
   const handleToggleSuspend = () => {
     if (!suspendingTenant) return;
-    setTenants((prev) =>
-      prev.map((t) => {
-        if (t.id !== suspendingTenant.id) return t;
-        const newStatus = t.status === 'Suspended' ? 'Active' : 'Suspended';
-        return { ...t, status: newStatus };
-      })
+    const isSuspended = suspendingTenant.status === 'Suspended';
+    toggleSuspendMutation.mutate(
+      {
+        id: suspendingTenant.numericId || suspendingTenant.id,
+        isSuspended,
+      },
+      {
+        onSettled: () => {
+          setSuspendingTenant(null);
+        },
+      }
     );
-    setSuspendingTenant(null);
   };
 
   const handleProvisionTenant = (e: React.FormEvent) => {
     e.preventDefault();
-    const newT = {
-      id: `TNT-00${tenants.length + 1}`,
-      name: newTenantForm.name,
-      domain: newTenantForm.domain,
-      plan: newTenantForm.plan,
-      status: 'Active',
-      dbName: `tenant_${newTenantForm.name.toLowerCase().replace(/\s+/g, '_')}_prod`,
-      storage: '0 MB / 25 GB',
-      created: 'Just now',
-    };
-    setTenants([...tenants, newT]);
-    setIsProvisionModalOpen(false);
-    alert(`Tenant ${newT.name} successfully provisioned with dedicated database shard.`);
+    provisionMutation.mutate(
+      {
+        name: newTenantForm.name,
+        domain: newTenantForm.domain,
+      },
+      {
+        onSettled: () => {
+          setIsProvisionModalOpen(false);
+          alert(`Tenant ${newTenantForm.name} provisioned with dedicated database shard.`);
+        },
+      }
+    );
   };
 
   return (

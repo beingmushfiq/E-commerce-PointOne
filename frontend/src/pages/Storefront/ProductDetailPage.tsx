@@ -7,6 +7,7 @@ import { useProducts } from '../../hooks/useCatalog';
 import { useAddToCart } from '../../hooks/useCheckout';
 import { useCurrency } from '../../contexts/CurrencyContext';
 import { EditorialButton, Badge } from '../../components/DesignSystem';
+import { useMagnetic, useParallax } from '../../hooks/useGsapMotion';
 import type { ProductItem } from '../../types/ui';
 
 export const ProductDetailPage: React.FC = () => {
@@ -18,6 +19,11 @@ export const ProductDetailPage: React.FC = () => {
 
   const productsList: ProductItem[] = (productsData as any)?.data || productsData || [];
   const product = productsList.find((p) => p.slug === slug || p.id.toString() === slug);
+
+  // GSAP Kinetic Hooks
+  const pdpImageRef = useParallax<HTMLImageElement>({ speed: 10, scale: 1.05 });
+  const addToBagBtnRef = useMagnetic<HTMLButtonElement>({ strength: 0.3 });
+  const instantBuyBtnRef = useMagnetic<HTMLButtonElement>({ strength: 0.3 });
 
   // Variant selections
   const [selectedMaterial, setSelectedMaterial] = useState('18K Rose Gold');
@@ -107,9 +113,10 @@ export const ProductDetailPage: React.FC = () => {
           <div className="space-y-4">
             <div className="aspect-square rounded-3xl overflow-hidden bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-md">
               <img
-                src={product.image_url || 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=1000'}
+                ref={pdpImageRef}
+                src={product.image_url || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=1000'}
                 alt={product.name}
-                className="w-full h-full object-cover object-center"
+                className="w-full h-full object-cover object-center will-change-transform"
               />
             </div>
             <div className="grid grid-cols-4 gap-3">
@@ -251,21 +258,29 @@ export const ProductDetailPage: React.FC = () => {
               </div>
 
               <EditorialButton
+                ref={addToBagBtnRef}
                 onClick={handleAddToCart}
                 size="lg"
                 variant="primary"
                 className="flex-1 bg-zinc-950 text-amber-400 hover:bg-black dark:bg-amber-500 dark:text-zinc-950 dark:hover:bg-amber-400"
                 icon={<ShoppingBag className="w-4 h-4" />}
+                data-cursor="pointer"
+                data-cursor-text="ADD"
               >
                 Add To Bag
               </EditorialButton>
 
-              <button
+              <EditorialButton
+                ref={instantBuyBtnRef}
                 onClick={() => navigate('/checkout')}
-                className="px-6 py-3 rounded-xl bg-amber-500 text-zinc-950 text-xs font-bold font-mono tracking-wider hover:bg-amber-400 transition cursor-pointer shadow"
+                size="lg"
+                variant="amber"
+                className="px-6 py-3 font-bold font-mono tracking-wider"
+                data-cursor="pointer"
+                data-cursor-text="BUY"
               >
                 Instant Buy
-              </button>
+              </EditorialButton>
             </div>
           </div>
         </div>
@@ -282,8 +297,8 @@ export const ProductDetailPage: React.FC = () => {
         <EditorialButton
           onClick={handleAddToCart}
           size="md"
-          variant="primary"
-          className="flex-1 bg-amber-500 text-zinc-950"
+          variant="amber"
+          className="flex-1 font-bold shadow-md"
           icon={<ShoppingBag className="w-4 h-4" />}
         >
           Add to Bag

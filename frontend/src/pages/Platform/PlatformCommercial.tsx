@@ -1,13 +1,28 @@
 import React from 'react';
 import { Check } from 'lucide-react';
 import { Badge } from '../../components/DesignSystem';
+import { usePlatformPlans } from '../../hooks/usePlatform';
 
 export const PlatformCommercial: React.FC = () => {
-  const plans = [
+  const { data: serverPlans } = usePlatformPlans();
+
+  const fallbackPlans = [
     { name: 'Starter Boutique', price: '৳ 15,000 / mo', storage: '10 GB DB', stores: '1 Storefront', fee: '1.5% GMV', tenants: 3 },
     { name: 'Growth Tier', price: '৳ 35,000 / mo', storage: '25 GB DB', stores: '3 Storefronts', fee: '1.0% GMV', tenants: 8, popular: true },
     { name: 'Enterprise Atelier', price: '৳ 85,000 / mo', storage: 'Dedicated DB Shard', stores: 'Unlimited', fee: '0.5% GMV', tenants: 3 },
   ];
+
+  const plans = serverPlans && Array.isArray(serverPlans) && serverPlans.length > 0
+    ? serverPlans.map((p: any, idx: number) => ({
+        name: p.name,
+        price: `৳ ${Number(p.price || 0).toLocaleString()} / ${p.billing_period || 'mo'}`,
+        storage: `${p.database_limit_mb ? p.database_limit_mb / 1024 : 25} GB DB`,
+        stores: `${p.max_stores || 1} Storefront`,
+        fee: `${p.transaction_fee_percentage || 1}% GMV`,
+        tenants: p.subscriptions_count || (idx === 1 ? 8 : 3),
+        popular: idx === 1,
+      }))
+    : fallbackPlans;
 
   return (
     <div className="space-y-8 font-sans">

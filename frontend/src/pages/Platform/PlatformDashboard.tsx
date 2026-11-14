@@ -5,25 +5,34 @@ import {
   Cpu, Terminal
 } from 'lucide-react';
 import { Badge, StatusPulse } from '../../components/DesignSystem';
+import { usePlatformKpis, usePlatformHealth } from '../../hooks/usePlatform';
+import { useCounterTween } from '../../hooks/useGsapMotion';
 
 export const PlatformDashboard: React.FC = () => {
+  const { data: kpis } = usePlatformKpis();
+  const { data: health } = usePlatformHealth();
+
   const platformMetrics = {
-    totalTenants: 14,
-    activeTenants: 11,
-    trialTenants: 2,
-    suspendedTenants: 1,
-    mrr: 420000,
+    totalTenants: kpis?.tenants?.total ?? 14,
+    activeTenants: kpis?.tenants?.active ?? 11,
+    trialTenants: kpis?.subscriptions?.trialing ?? 2,
+    suspendedTenants: kpis?.tenants?.suspended ?? 1,
+    mrr: kpis?.subscriptions?.mrr ?? 420000,
     gmv30d: 48200000,
-    failedProbes: 0,
+    failedProbes: health?.database && health.database !== 'ok' ? 1 : 0,
     queueWorkersActive: 12,
   };
 
+  const mrrCounterRef = useCounterTween({ endValue: platformMetrics.mrr, prefix: '৳ ', duration: 1.8 });
+  const activeTenantsCounterRef = useCounterTween({ endValue: platformMetrics.activeTenants, duration: 1.2 });
+  const gmvCounterRef = useCounterTween({ endValue: 48.2, prefix: '৳ ', suffix: 'M', decimals: 1, duration: 2.0 });
+
   const infrastructureProbes = [
-    { service: 'Central Control Database (MySQL Primary)', status: 'healthy', latency: '1.2ms', checkTime: '4s ago' },
+    { service: 'Central Control Database (MySQL/SQLite Primary)', status: health?.database === 'ok' ? 'healthy' : 'degraded', latency: health?.db_latency_ms ? `${health.db_latency_ms}ms` : '1.2ms', checkTime: 'Just now' },
     { service: 'Tenant DB Shard Pool (14 Databases)', status: 'healthy', latency: '2.8ms', checkTime: '2s ago' },
-    { service: 'Redis Cache & Session Cluster', status: 'healthy', latency: '0.4ms', checkTime: '1s ago' },
+    { service: 'Redis Cache & Session Cluster', status: health?.cache === 'ok' ? 'healthy' : 'standby', latency: '0.4ms', checkTime: '1s ago' },
     { service: 'Async Worker Queue (Laravel Horizon)', status: 'healthy', latency: '0 pending', checkTime: '5s ago' },
-    { service: 'S3-Compatible Object Storage (Wasabi/AWS)', status: 'healthy', latency: '42ms', checkTime: '12s ago' },
+    { service: 'S3-Compatible Object Storage (Wasabi/AWS)', status: health?.storage === 'ok' ? 'healthy' : 'active', latency: '42ms', checkTime: '12s ago' },
   ];
 
   const recentTenants = [
@@ -73,8 +82,9 @@ export const PlatformDashboard: React.FC = () => {
             <span>Active Tenant Fleet</span>
             <Server className="w-4 h-4 text-amber-500" />
           </div>
-          <div className="font-mono font-bold text-2xl text-white">
-            {platformMetrics.activeTenants} / {platformMetrics.totalTenants}
+          <div className="font-mono font-bold text-2xl text-white flex items-center gap-1">
+            <span ref={activeTenantsCounterRef}>{platformMetrics.activeTenants}</span>
+            <span>/ {platformMetrics.totalTenants}</span>
           </div>
           <span className="text-[11px] font-mono text-zinc-400">
             {platformMetrics.trialTenants} in trial • {platformMetrics.suspendedTenants} suspended
@@ -86,7 +96,7 @@ export const PlatformDashboard: React.FC = () => {
             <span>Monthly Recurring (MRR)</span>
             <CreditCard className="w-4 h-4 text-emerald-400" />
           </div>
-          <div className="font-mono font-bold text-2xl text-white">
+          <div ref={mrrCounterRef} className="font-mono font-bold text-2xl text-white">
             ৳ {platformMetrics.mrr.toLocaleString()}
           </div>
           <span className="text-[11px] font-mono text-emerald-400">
@@ -99,7 +109,7 @@ export const PlatformDashboard: React.FC = () => {
             <span>Ecosystem GMV (30D)</span>
             <Activity className="w-4 h-4 text-blue-400" />
           </div>
-          <div className="font-mono font-bold text-2xl text-white">
+          <div ref={gmvCounterRef} className="font-mono font-bold text-2xl text-white">
             ৳ {(platformMetrics.gmv30d / 1000000).toFixed(1)}M
           </div>
           <span className="text-[11px] font-mono text-zinc-400">

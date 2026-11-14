@@ -9,7 +9,7 @@
 [![React](https://img.shields.io/badge/React-19.x-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Motion & Smooth Scroll](https://img.shields.io/badge/GSAP%203%20%2B%20Lenis-Luxury%20Kinetic-amber?style=flat-square)](https://gsap.com)
-[![Automated Tests](https://img.shields.io/badge/PHPUnit-94%20Passed%20%7C%20483%20Assertions-10B981?style=flat-square&logo=php&logoColor=white)](https://phpunit.de)
+[![Automated Tests](https://img.shields.io/badge/PHPUnit-97%20Passed%20%7C%20494%20Assertions-10B981?style=flat-square&logo=php&logoColor=white)](https://phpunit.de)
 [![Created by DevCenterPoint](https://img.shields.io/badge/Engineered%20by-DevCenterPoint-D97706?style=flat-square&logo=googlechrome&logoColor=white)](https://devcenterpoint.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
 

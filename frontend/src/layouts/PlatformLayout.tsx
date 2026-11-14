@@ -60,7 +60,7 @@ export const PlatformLayout: React.FC = () => {
           </div>
 
           {/* Navigation Items */}
-          <nav className="p-3 space-y-1 mt-2">
+          <nav className="p-3 space-y-1 mt-2" data-lenis-prevent>
             {navItems.map((item) => {
               const isActive =
                 location.pathname === item.path ||
@@ -130,7 +130,7 @@ export const PlatformLayout: React.FC = () => {
       </aside>
 
       {/* 2. OPERATIONAL CANVAS */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto" data-lenis-prevent>
         {/* Top Operational Bar */}
         <header className="h-16 px-6 border-b border-zinc-800 bg-zinc-900/60 backdrop-blur-md flex items-center justify-between sticky top-0 z-20">
           <div className="flex items-center gap-4">

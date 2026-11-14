@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useMotion } from '../contexts/MotionContext';
+import { cn } from '../utils/cn';
 
 interface SpotlightCardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
@@ -57,7 +58,10 @@ export const SpotlightCard: React.FC<SpotlightCardProps> = ({
         transform: transformStyle,
         transition: isHovered ? 'transform 0.1s ease-out' : 'transform 0.5s ease-out',
       }}
-      className={`relative rounded-2xl overflow-hidden bg-white/90 dark:bg-[#121215]/80 backdrop-blur-xl border border-zinc-200/90 dark:border-zinc-800/80 shadow-sm hover:shadow-xl transition-shadow duration-300 ${className}`}
+      className={cn(
+        'relative rounded-2xl overflow-hidden bg-white/90 dark:bg-[#121215]/80 backdrop-blur-xl border border-zinc-200/90 dark:border-zinc-800/80 shadow-sm hover:shadow-xl transition-shadow duration-300',
+        className
+      )}
       {...props}
     >
       {/* Ambient Spotlight Layer */}

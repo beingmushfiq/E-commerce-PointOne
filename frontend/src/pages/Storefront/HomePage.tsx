@@ -7,6 +7,7 @@ import {
 import { useProducts, useCategories } from '../../hooks/useCatalog';
 import { useAddToCart } from '../../hooks/useCheckout';
 import { EditorialButton, EditorialProductCard } from '../../components/DesignSystem';
+import { useParallax, useMagnetic, useScrollReveal, useCounterTween } from '../../hooks/useGsapMotion';
 import type { ProductItem } from '../../types/ui';
 
 export type StorefrontThemePreset = 'luxury_editorial' | 'modern_tech' | 'lifestyle_fashion';
@@ -21,6 +22,15 @@ export const HomePage: React.FC = () => {
   const [activeTheme, setActiveTheme] = useState<StorefrontThemePreset>('luxury_editorial');
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [faqOpenIndex, setFaqOpenIndex] = useState<number | null>(null);
+
+  // GSAP 3 Kinetic Motion Hooks
+  const heroParallaxRef = useParallax<HTMLImageElement>({ speed: 20, scale: 1.12 });
+  const heroButtonRef1 = useMagnetic<HTMLButtonElement>({ strength: 0.35 });
+  const heroButtonRef2 = useMagnetic<HTMLButtonElement>({ strength: 0.25 });
+  const productGridRef = useScrollReveal<HTMLDivElement>({ y: 40, stagger: 0.1, duration: 1.0 });
+  const countComponentsRef = useCounterTween<HTMLSpanElement>({ endValue: 300, suffix: '+' });
+  const countReserveRef = useCounterTween<HTMLSpanElement>({ endValue: 120, suffix: ' hrs' });
+  const countAtmRef = useCounterTween<HTMLSpanElement>({ endValue: 10, suffix: ' ATM' });
 
   const productsList: ProductItem[] = (productsData as any)?.data || productsData || [];
   const categoriesList: any[] = (categoriesData as any)?.data || categoriesData || [];
@@ -55,51 +65,42 @@ export const HomePage: React.FC = () => {
 
   return (
     <div className="space-y-24 pb-20">
-      {/* THEME PRESET SWITCHER PILL (DEMONSTRATION TOOLBAR) */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-        <div className="p-3 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="p-1.5 rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400">
-              <Sliders className="w-4 h-4" />
-            </span>
-            <span className="text-xs font-mono font-semibold text-zinc-700 dark:text-zinc-300">
-              Multi-Industry Theme Showcase:
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setActiveTheme('luxury_editorial')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-mono font-semibold transition cursor-pointer ${
-                activeTheme === 'luxury_editorial'
-                  ? 'bg-zinc-900 text-white dark:bg-amber-500 dark:text-zinc-950 shadow-sm'
-                  : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
-              }`}
-            >
-              Flagship Luxury Editorial
-            </button>
-            <button
-              onClick={() => setActiveTheme('modern_tech')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-mono font-semibold transition cursor-pointer ${
-                activeTheme === 'modern_tech'
-                  ? 'bg-zinc-900 text-white dark:bg-amber-500 dark:text-zinc-950 shadow-sm'
-                  : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
-              }`}
-            >
-              Modern Electronics
-            </button>
-            <button
-              onClick={() => setActiveTheme('lifestyle_fashion')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-mono font-semibold transition cursor-pointer ${
-                activeTheme === 'lifestyle_fashion'
-                  ? 'bg-zinc-900 text-white dark:bg-amber-500 dark:text-zinc-950 shadow-sm'
-                  : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
-              }`}
-            >
-              Lifestyle & Apparel
-            </button>
-          </div>
+      {/* MULTI-INDUSTRY THEME PRESET FLOATING DOCK */}
+      <div className="fixed bottom-6 left-6 z-40 hidden sm:flex items-center gap-2 p-2 rounded-2xl bg-zinc-950/90 text-white border border-zinc-800 shadow-2xl backdrop-blur-md">
+        <div className="flex items-center gap-1.5 px-2 text-[11px] font-mono text-zinc-400">
+          <Sliders className="w-3.5 h-3.5 text-amber-400" />
+          <span>Theme:</span>
         </div>
+        <button
+          onClick={() => setActiveTheme('luxury_editorial')}
+          className={`px-3 py-1 rounded-xl text-[11px] font-mono transition cursor-pointer ${
+            activeTheme === 'luxury_editorial'
+              ? 'bg-amber-500 text-zinc-950 font-bold shadow'
+              : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+          }`}
+        >
+          Luxury Editorial
+        </button>
+        <button
+          onClick={() => setActiveTheme('modern_tech')}
+          className={`px-3 py-1 rounded-xl text-[11px] font-mono transition cursor-pointer ${
+            activeTheme === 'modern_tech'
+              ? 'bg-amber-500 text-zinc-950 font-bold shadow'
+              : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+          }`}
+        >
+          Tech
+        </button>
+        <button
+          onClick={() => setActiveTheme('lifestyle_fashion')}
+          className={`px-3 py-1 rounded-xl text-[11px] font-mono transition cursor-pointer ${
+            activeTheme === 'lifestyle_fashion'
+              ? 'bg-amber-500 text-zinc-950 font-bold shadow'
+              : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+          }`}
+        >
+          Fashion
+        </button>
       </div>
 
       {/* 1. HERO SECTION */}
@@ -107,24 +108,25 @@ export const HomePage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="relative rounded-3xl overflow-hidden bg-zinc-950 text-white min-h-[640px] flex items-center">
             {/* Background Photographic Canvas */}
-            <div className="absolute inset-0 z-0">
+            <div className="absolute inset-0 z-0 overflow-hidden">
               <img
+                ref={heroParallaxRef}
                 src={
                   activeTheme === 'modern_tech'
                     ? 'https://images.unsplash.com/photo-1550009158-9ebf69173e03?w=1600&q=80'
                     : activeTheme === 'lifestyle_fashion'
                     ? 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1600&q=80'
-                    : 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=1600&q=80'
+                    : 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?w=1600&q=85'
                 }
                 alt="CENTERPOINT Masterpiece"
-                className="w-full h-full object-cover object-center opacity-40 scale-105 transition-all duration-1000"
+                className="w-full h-full object-cover object-center opacity-40 scale-105 will-change-transform"
               />
               <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/70 to-transparent" />
             </div>
 
             {/* Hero Copy & Call to Action */}
             <div className="relative z-10 max-w-2xl p-8 sm:p-14 lg:p-20 space-y-6">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-mono uppercase tracking-widest">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-mono uppercase tracking-widest animate-fade-in">
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>
                   {activeTheme === 'modern_tech'
@@ -153,19 +155,25 @@ export const HomePage: React.FC = () => {
 
               <div className="flex flex-wrap items-center gap-4 pt-4">
                 <EditorialButton
+                  ref={heroButtonRef1}
                   onClick={() => navigate('/collections/all')}
                   size="lg"
-                  variant="primary"
-                  className="bg-amber-500 text-zinc-950 hover:bg-amber-400"
+                  variant="amber"
+                  className="font-bold shadow-xl shadow-amber-500/20 px-8 py-3.5"
                   icon={<ArrowRight className="w-4 h-4" />}
+                  data-cursor="pointer"
+                  data-cursor-text="DISCOVER"
                 >
                   Explore Collection
                 </EditorialButton>
                 <EditorialButton
+                  ref={heroButtonRef2}
                   onClick={() => navigate('/studio')}
                   size="lg"
-                  variant="outline"
-                  className="text-white border-zinc-700 hover:border-white"
+                  variant="outlineLight"
+                  className="px-8 py-3.5 font-semibold"
+                  data-cursor="pointer"
+                  data-cursor-text="STUDIO"
                 >
                   Manage In Studio
                 </EditorialButton>
@@ -260,15 +268,20 @@ export const HomePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Product Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Product Grid with Staggered Scroll Entrance */}
+        <div
+          ref={productGridRef}
+          data-stagger-children="true"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+        >
           {filteredProducts.map((product) => (
-            <EditorialProductCard
-              key={product.id}
-              product={product}
-              onAddToCart={handleAddToCart}
-              onClick={() => navigate(`/products/${product.slug || product.id}`)}
-            />
+            <div key={product.id} data-cursor="pointer" data-cursor-text="VIEW">
+              <EditorialProductCard
+                product={product}
+                onAddToCart={handleAddToCart}
+                onClick={() => navigate(`/products/${product.slug || product.id}`)}
+              />
+            </div>
           ))}
         </div>
       </section>
@@ -291,17 +304,17 @@ export const HomePage: React.FC = () => {
 
             <div className="pt-4 flex items-center gap-6 text-xs font-mono">
               <div>
-                <span className="text-xl font-bold font-serif text-zinc-900 dark:text-white block">300+</span>
+                <span ref={countComponentsRef} className="text-xl font-bold font-serif text-zinc-900 dark:text-white block">300+</span>
                 <span className="text-zinc-500">Individual Components</span>
               </div>
               <div className="h-8 w-px bg-zinc-200 dark:bg-zinc-800" />
               <div>
-                <span className="text-xl font-bold font-serif text-zinc-900 dark:text-white block">120 hrs</span>
+                <span ref={countReserveRef} className="text-xl font-bold font-serif text-zinc-900 dark:text-white block">120 hrs</span>
                 <span className="text-zinc-500">Power Reserve</span>
               </div>
               <div className="h-8 w-px bg-zinc-200 dark:bg-zinc-800" />
               <div>
-                <span className="text-xl font-bold font-serif text-zinc-900 dark:text-white block">10 ATM</span>
+                <span ref={countAtmRef} className="text-xl font-bold font-serif text-zinc-900 dark:text-white block">10 ATM</span>
                 <span className="text-zinc-500">Water Resistance</span>
               </div>
             </div>

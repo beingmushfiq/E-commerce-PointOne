@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\V1\Platform\PlanManagementController;
 use App\Http\Controllers\Api\V1\Platform\StorefrontCustomizerController;
 use App\Http\Controllers\Api\V1\AiAssistantController;
 use App\Http\Controllers\Api\V1\SeoController;
+use App\Http\Controllers\Api\V1\PublicOrderTrackingController;
 use App\Http\Controllers\Api\V1\Admin\AdminCatalogController;
 use App\Http\Controllers\Api\V1\Admin\AdminOrderController;
 use App\Http\Controllers\Api\V1\Admin\AdminCmsContentController;
@@ -45,6 +46,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/cart', [CheckoutController::class, 'getCart']);
     Route::post('/cart/add', [CheckoutController::class, 'addToCart']);
     Route::post('/checkout/process', [CheckoutController::class, 'processCheckout']);
+    Route::get('/orders/public-track/{reference}', [PublicOrderTrackingController::class, 'track']);
 
     // Public Catalog Routes
     Route::get('/categories', [CatalogController::class, 'categories']);
@@ -111,6 +113,8 @@ Route::prefix('v1')->group(function () {
             Route::get('/admin/analytics', [AdminDashboardController::class, 'analytics']);
             Route::get('/admin/logs', [AdminDashboardController::class, 'logs']);
             Route::get('/admin/health', [AdminDashboardController::class, 'health']);
+            Route::get('/admin/store-settings', [AdminDashboardController::class, 'storeSettings']);
+            Route::put('/admin/store-settings', [AdminDashboardController::class, 'updateStoreSettings']);
 
             // Admin Operations for Products, Categories, Orders, Sliders, FAQs
             Route::post('/admin/products', [AdminCatalogController::class, 'storeProduct']);

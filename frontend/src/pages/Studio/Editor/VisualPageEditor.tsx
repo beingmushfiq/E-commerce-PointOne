@@ -29,7 +29,7 @@ export const VisualPageEditor: React.FC = () => {
         subtitle: 'Bespoke timepieces, artisanal apparel, and refined modern essentials crafted with generational mastery.',
         ctaText: 'Explore Grand Collection',
         ctaLink: '/collections/all',
-        imageUrl: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=1600',
+        imageUrl: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=1600',
         align: 'left',
       },
     },
@@ -146,7 +146,7 @@ export const VisualPageEditor: React.FC = () => {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-3 space-y-2">
+        <div className="flex-1 overflow-y-auto p-3 space-y-2" data-lenis-prevent>
           {sections.map((section, idx) => {
             const isSelected = section.id === selectedSectionId;
             return (
@@ -203,7 +203,7 @@ export const VisualPageEditor: React.FC = () => {
       </aside>
 
       {/* 2. CENTER CANVAS: LIVE RESPONSIVE PREVIEW */}
-      <main className="flex-1 bg-zinc-950 overflow-y-auto p-6 flex justify-center items-start">
+      <main className="flex-1 bg-zinc-950 overflow-y-auto p-6 flex justify-center items-start" data-lenis-prevent>
         <div
           className={`${viewportWidthClass} transition-all duration-300 bg-white text-zinc-950 rounded-2xl overflow-hidden shadow-2xl min-h-[850px] border border-zinc-800 relative`}
         >
@@ -324,7 +324,7 @@ export const VisualPageEditor: React.FC = () => {
           )}
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-5 text-xs font-mono">
+        <div className="flex-1 overflow-y-auto p-4 space-y-5 text-xs font-mono" data-lenis-prevent>
           {selectedSection ? (
             <>
               {selectedSection.props.headline !== undefined && (

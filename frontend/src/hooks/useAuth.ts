@@ -29,7 +29,7 @@ export const useAuth = () => {
       try {
         const res = await api.get('/auth/me');
         return res.data.data.user;
-      } catch (err) {
+      } catch {
         setToken(null);
         return null;
       }

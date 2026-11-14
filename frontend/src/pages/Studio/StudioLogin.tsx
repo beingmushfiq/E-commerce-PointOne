@@ -99,8 +99,8 @@ export const StudioLogin: React.FC = () => {
             type="submit"
             disabled={loading}
             size="lg"
-            variant="primary"
-            className="w-full bg-amber-500 text-zinc-950 hover:bg-amber-400 shadow-md font-mono font-bold"
+            variant="amber"
+            className="w-full shadow-md font-mono font-bold"
           >
             {loading ? 'Authenticating Staff...' : 'Sign In To Store Studio'}
           </EditorialButton>

@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Settings, Users, Check } from 'lucide-react';
 import { Badge, EditorialButton } from '../../components/DesignSystem';
+import { useStudioSettings, useUpdateStudioSettings } from '../../hooks/useStudio';
 
 export const StudioSettings: React.FC = () => {
+  const { data: serverSettings } = useStudioSettings();
+  const updateSettingsMutation = useUpdateStudioSettings();
+
   const [settings, setSettings] = useState({
     storeName: 'CENTERPOINT Flagship Store',
     supportEmail: 'concierge@centerpoint.atelier',
@@ -12,19 +16,42 @@ export const StudioSettings: React.FC = () => {
     maintenanceMode: false,
   });
 
-  const team = [
+  const fallbackTeam = [
     { name: 'Mushfiqur Rahman', email: 'owner@centerpoint.atelier', role: 'Store Owner', status: 'Active' },
     { name: 'Farhan Zahed', email: 'farhan@centerpoint.atelier', role: 'Store Manager', status: 'Active' },
     { name: 'Shakil Ahmed', email: 'finance@centerpoint.atelier', role: 'Accountant / Finance', status: 'Active' },
     { name: 'Imran Hossain', email: 'inventory@centerpoint.atelier', role: 'Inventory Manager', status: 'Active' },
   ];
 
+  const team = serverSettings?.team?.length > 0 ? serverSettings.team : fallbackTeam;
+
+  useEffect(() => {
+    if (serverSettings) {
+      setSettings((prev) => ({
+        ...prev,
+        storeName: serverSettings.storeName || prev.storeName,
+        supportEmail: serverSettings.supportEmail || prev.supportEmail,
+        supportPhone: serverSettings.supportPhone || prev.supportPhone,
+        vatRate: serverSettings.vatRate ?? prev.vatRate,
+        lowStockThreshold: serverSettings.lowStockThreshold ?? prev.lowStockThreshold,
+      }));
+    }
+  }, [serverSettings]);
+
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    setSavedMessage('Store operational settings saved successfully.');
-    setTimeout(() => setSavedMessage(null), 3000);
+    updateSettingsMutation.mutate(settings, {
+      onSuccess: () => {
+        setSavedMessage('Store operational settings saved successfully.');
+        setTimeout(() => setSavedMessage(null), 3000);
+      },
+      onError: () => {
+        setSavedMessage('Store settings updated locally (Standalone profile).');
+        setTimeout(() => setSavedMessage(null), 3000);
+      },
+    });
   };
 
   return (
@@ -134,7 +161,7 @@ export const StudioSettings: React.FC = () => {
           </div>
 
           <div className="space-y-3">
-            {team.map((m) => (
+            {team.map((m: any) => (
               <div
                 key={m.email}
                 className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-100 dark:border-zinc-700/60 flex items-center justify-between text-xs font-mono"

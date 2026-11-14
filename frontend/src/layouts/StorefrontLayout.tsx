@@ -11,6 +11,8 @@ import { useCart, useAddToCart } from '../hooks/useCheckout';
 import { useProducts } from '../hooks/useCatalog';
 import { CommandPalette, CartDrawer } from '../components/DesignSystem';
 import { FloatingAiWidget } from '../components/FloatingAiWidget';
+import { LuxuryCursor } from '../components/LuxuryCursor';
+import { useLenis } from '../components/SmoothScroll';
 import type { ProductItem } from '../types/ui';
 import api from '../services/api';
 
@@ -28,6 +30,16 @@ export const StorefrontLayout: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCurrencyDropdownOpen, setIsCurrencyDropdownOpen] = useState(false);
   const [storeConfig, setStoreConfig] = useState<any>(null);
+  const { stop: stopScroll, start: startScroll } = useLenis();
+
+  // Gracefully pause inertial scroll when cart drawer or command modal is open
+  useEffect(() => {
+    if (isCartOpen || isCommandOpen) {
+      stopScroll();
+    } else {
+      startScroll();
+    }
+  }, [isCartOpen, isCommandOpen, stopScroll, startScroll]);
 
   // Load public storefront config
   useEffect(() => {
@@ -377,6 +389,9 @@ export const StorefrontLayout: React.FC = () => {
 
       {/* 7. BILINGUAL AI CONCIERGE WIDGET */}
       <FloatingAiWidget onAddToCart={handleAddToCart} />
+
+      {/* 8. BESPOKE KINETIC LUXURY CURSOR FOLLOWER */}
+      <LuxuryCursor />
     </div>
   );
 };

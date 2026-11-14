@@ -54,7 +54,7 @@ export const SectionRenderer: React.FC<SectionRendererProps> = ({
                 </p>
                 {section.content?.cta_text && (
                   <EditorialButton
-                    variant="primary"
+                    variant="amber"
                     onClick={() => onCtaClick?.(section.content?.cta_url || '/')}
                   >
                     <span>{section.content.cta_text}</span>

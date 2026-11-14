@@ -153,7 +153,7 @@
 | Standalone Edition Release Packager | 🟢 Implemented & Verified | `bin/package-release.sh` & `bin/package-release.ps1` generating clean dist zips |
 | SaaS Multi-Tenant Release Packager | 🟢 Implemented & Verified | Generates multi-tenant packages with central DB presets and Redis profiles |
 | Comprehensive Deployment Documentation | 🟢 Implemented & Verified | `cpanel-deployment-guide.md` & `standalone-vs-saas-guide.md` in `docs/deployment/` |
-| End-to-End Automated Test Verification | 🟢 Implemented & Verified | 94 backend tests, 483 assertions passing across all domains with 0 errors |
+| End-to-End Automated Test Verification | 🟢 Implemented & Verified | 97 backend tests, 494 assertions passing across all domains with 0 errors |
 
 ---
 
@@ -165,7 +165,10 @@
 | Visual Page Editor (`/studio/editor/:pageId`) | 🟢 Implemented & Verified | 3-Panel Visual CMS: Section layout tree, live responsive viewport canvas (1440px desktop, 768px tablet, 375px mobile), real-time property inspector, revision history, sandboxed preview |
 | Experience 03 — Master Control (`/platform/*`) | 🟢 Implemented & Verified | Dark-first SaaS operator console: Global Command Center, Real infrastructure probes (Central DB, Shard Pool, Redis, Horizon, Wasabi/S3), Tenant Fleet Registry & Lifecycle (Provisioning, Suspend/Restore), Commercial Subscription Tiers, SRE Audit Log |
 | Declarative Routing & Partitioned Auth Guards | 🟢 Implemented & Verified | React Router v7 routes with code-splitting, role & permission guards, partitioned token isolation (`cp_customer_token`, `cp_staff_token`, `cp_platform_token`) |
-| Strict Build & Type Safety | 🟢 Implemented & Verified | 0 TypeScript errors (`tsc -b`), 0 Vite build errors, 0 Oxlint errors across 66 frontend modules |
+| Persistent Session & Live API Bridges | 🟢 Implemented & Verified | `session.ts` guest token persistence, live React Query hooks for Studio orders, inventory, accounting, platform KPIs, health diagnostics |
+| Public Order Tracking Bridge | 🟢 Implemented & Verified | `PublicOrderTrackingController` resolving order numbers & courier tracking with phone privacy gates |
+| Strict Build & Type Safety | 🟢 Implemented & Verified | 0 TypeScript errors (`tsc -b`), 0 Vite build errors, 0 Oxlint errors across 69 frontend modules |
+| Design System & Visual Consistency Architecture | 🟢 Implemented & Verified | `frontend/src/utils/cn.ts` with `twMerge` + `clsx` eliminates Tailwind class conflicts; explicit high-contrast variants (`amber`, `inverted`) guarantee readable buttons across light/dark surfaces; luxury horology imagery aligned across all storefront & studio presets |
 
 
 
