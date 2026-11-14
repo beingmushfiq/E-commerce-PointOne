@@ -9,7 +9,7 @@
 [![React](https://img.shields.io/badge/React-19.x-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Motion & Smooth Scroll](https://img.shields.io/badge/GSAP%203%20%2B%20Lenis-Luxury%20Kinetic-amber?style=flat-square)](https://gsap.com)
-[![Automated Tests](https://img.shields.io/badge/PHPUnit-90%20Passed%20%7C%20462%20Assertions-10B981?style=flat-square&logo=php&logoColor=white)](https://phpunit.de)
+[![Automated Tests](https://img.shields.io/badge/PHPUnit-94%20Passed%20%7C%20483%20Assertions-10B981?style=flat-square&logo=php&logoColor=white)](https://phpunit.de)
 [![Created by DevCenterPoint](https://img.shields.io/badge/Engineered%20by-DevCenterPoint-D97706?style=flat-square&logo=googlechrome&logoColor=white)](https://devcenterpoint.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
 
@@ -81,30 +81,62 @@ Built from the ground up on a **Dual-Edition Decoupled Architecture**, CENTERPOI
 ---
 
 <a id="ui-ux-design"></a>
-## 💎 Luxury Visual Architecture & Omnipotent Master Control Panel
+## 💎 Three Enterprise Product Experiences & Visual Architecture
 
-Engineered by **[DevCenterPoint](https://devcenterpoint.com)**, CENTERPOINT features an editorial luxury aesthetic designed to completely eliminate generic "AI-sloppy" commerce templates.
+Engineered by **[DevCenterPoint](https://devcenterpoint.com)** according to the **CENTERPOINT UI/UX Design Specification**, the platform is structured as three distinct, connected product experiences, each with its own information architecture, interaction patterns, visual personality, and decoupled authorization guard.
 
-### 🎨 Visual Identity & Kinetic Physics
-- **Obsidian Liquid Gold & Alabaster Palette:** Deep canvas obsidian (`#09090B`) and zinc surfaces illuminated by champagne gold (`#D97706` / `#F59E0B`). Light Mode is default, styled with warm alabaster (`#FAFAF9`), pure glass cards, and crisp typography.
-- **Circular Spatial Theme Reveal:** Switching themes triggers a smooth circular `clip-path` expansion starting dynamically from the exact screen coordinates of the clicked toggle button via the native View Transitions API.
-- **5 Selectable Motion Profiles (Lenis + GSAP 3):**
-  1. `editorial_flow` (Default): Subtle, high-velocity inertia with delicate fade-up and magnetic buttons.
-  2. `cinematic_showcase`: Interactive 3D perspective tilt, mouse-tracking spotlights, and multi-layer parallax depth.
-  3. `minimal_precision`: Zero parallax, ultra-snappy 120ms transitions, clean micro-damping.
-  4. `velvet_luxury`: Slow graceful liquid easing, delayed stagger, deep blur shifts.
-  5. `kinetic_dynamic`: Spring physics, playful hover attraction, scale popovers.
-- **Bespoke Luxury Preloader:** Geometric monogram SVG draw animation with real numerical counter (0–100%) and velvet dissolve.
-- **Bangladeshi Taka & Multi-Currency Engine:** Default BDT currency format (`৳ 250,000.00`) with instant header currency switching (`৳ BDT`, `$ USD`, `€ EUR`).
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                              CENTERPOINT Product Triad                                 │
+├──────────────────────────────┬──────────────────────────────┬──────────────────────────┤
+│ 01 — Storefront (`/`)        │ 02 — Store Studio (`/studio`)│ 03 — Master Control      │
+│ Customer Experience          │ Tenant Merchant Workspace    │ Platform Operator SRE    │
+├──────────────────────────────┼──────────────────────────────┼──────────────────────────┤
+│ • Brand-Led Editorial UX     │ • Overview & Operational Q   │ • Fleet Command Center   │
+│ • Multi-Industry Themes      │ • Catalog & Variable Matrix  │ • Real Infra Probes      │
+│ • Curated Grid & PDP Details │ • Orders & Courier Booking   │ • Multi-Tenant Registry  │
+│ • Bangladesh-Aware Checkout  │ • Multi-Vault Stock Ledger   │ • Plan Entitlements/MRR  │
+│ • Custody Chain Tracking     │ • Balanced Double-Entry Ledg │ • SRE Governance Logs    │
+│ • Self-Service Accounts      │ • 3-Panel Visual CMS Builder │ • Dedicated DB Isolation │
+└──────────────────────────────┴──────────────────────────────┴──────────────────────────┘
+```
 
-### 🎛️ Omnipotent Master Control Panel (MCP)
-Located at the secret high-security portal (`/#mcp-login` / `/platform/control-center`), restricted exclusively to the Superadmin (`platform` guard):
-- **Live Theme Customizer:** Real-time overrides for primary/accent colors, font scales, border radiuses, and glass blur intensities.
-- **Dynamic CMS Section Composer:** Live editing of hero slides, marquee tickers, storytelling banners, and CTA links.
-- **Currency & Gateway Levers:** Live exchange rate management and one-click toggles for bKash, SSLCommerz, Nagad, Cash on Delivery, Steadfast Courier, and Pathao Logistics.
-- **Sandboxed Custom Code:** Injects custom tenant CSS/JS safely inside isolated iframes with strict CSP.
-- **Branding Control:** Toggle DevCenterPoint attribution, custom logos, and platform slogans.
-- **Live Telemetry & Instant Reset:** Real-time monitoring of database query latency, cache hit health, and a one-click "Reset to Factory Defaults" failsafe.
+### 🛍️ Experience 01 — CENTERPOINT Storefront (`/`)
+*Customer experience: Brand-led shopping, product discovery, conversion, checkout, customer accounts, and order tracking.*
+- **Visual Personality:** Editorial, immersive, elegant, and conversion-focused.
+- **Multi-Industry Theme Presets:** Dynamic switching between *Luxury Editorial* (Atelier Horology flagship), *Modern Electronics* (Precision Audio), and *Lifestyle Fashion* (Maison Silk).
+- **Bangladesh-Aware Checkout:** Integrated delivery fields (Divisions, Districts, Thanas) and payment verification for **bKash**, **Nagad**, **SSLCommerz**, and Cash on Delivery.
+- **Order Tracking & Custody Chain:** Visual milestone timeline with courier tracking references (Steadfast, Pathao, RedX).
+- **Customer Account Concierge:** Profile, saved addresses, purchase history, and private concierge support tickets.
+
+### 🏢 Experience 02 — CENTERPOINT Store Studio (`/studio/*`)
+*Tenant merchant workspace: Products, orders, inventory, double-entry accounting, marketing, analytics, AI, and a professional visual website CMS.*
+- **Visual Personality:** Professional, information-rich, precise, and productive.
+- **Operational Queue & Overview:** Actionable work queue for pending shipments, low-stock warnings, and draft publications.
+- **Commerce Operations:** Orders table with direct courier booking modal and printable packing slips.
+- **Inventory Matrix & Movements:** Multi-warehouse visibility across vaults and an immutable stock movement ledger.
+- **Financial Ledger & Balanced Journals:** Double-entry accounting system with standard Chart of Accounts and balanced journal builder ($\sum \text{debits} == \sum \text{credits}$).
+- **Marketing, Attribution & Feeds:** Voucher campaigns, Meta Conversions API (CAPI) status, and Google Merchant Center XML feed endpoints.
+- **Full-Screen 3-Panel Visual CMS Workspace (`/studio/editor/:pageId`):**
+  - **Left Panel:** Section blocks and drag-and-drop Layout Tree.
+  - **Center Canvas:** Live interactive storefront preview with responsive viewport switcher (1440px Desktop, 768px Tablet, 375px Mobile).
+  - **Right Panel:** Property inspector for headlines, typography, color tokens, and layout alignment with instant draft preview and publication workflow.
+
+### 🎛️ Experience 03 — CENTERPOINT Master Control (`/platform/*`)
+*Platform experience: SaaS tenants, subscriptions, billing, provisioning, platform security, infrastructure, integrations, and system monitoring.*
+- **Visual Personality:** Authoritative, technical, sophisticated, dark-first (`#09090B`), and operationally focused.
+- **Platform Command Center:** Immediate operational answers for platform health, active tenant fleet count, recurring subscription revenue (MRR), and live worker queues.
+- **Real Infrastructure Probes:** Real-time latency checks for Central Control Database, Tenant DB Shard Pool, Redis Session Cluster, Laravel Horizon Queue Workers, and Object Storage.
+- **Tenant Fleet Registry & Lifecycle:** Automated tenant provisioning with dedicated DB shard assignment, quota governance, and audited suspension/restoration controls.
+- **Commercial SaaS Subscriptions:** Tier definitions (Starter Boutique, Growth Tier, Enterprise Atelier) with feature entitlement toggles and GMV fee settings.
+- **Operator Security & Audit Trail:** Tamper-evident log of platform-level administrative events.
+
+### 🎨 Shared Design Language & Design System
+- **Obsidian Liquid Gold & Alabaster Foundation:** Canvas obsidian (`#09090B`) and zinc surfaces illuminated by champagne gold (`#D97706`). Light Mode is default, styled with warm alabaster (`#FAFAF9`), pure glass cards, and crisp typography.
+- **Typography:** Cormorant Garamond for editorial headlines, Plus Jakarta Sans for UI and body text, and JetBrains Mono for financial figures, SKUs, and telemetry.
+- **Kinetic Physics (Lenis + GSAP 3):** 5 selectable motion profiles (`editorial_flow`, `cinematic_showcase`, `minimal_precision`, `velvet_luxury`, `kinetic_dynamic`).
+- **Circular Spatial Theme Reveal:** Theme transitions expand via circular `clip-path` starting dynamically from the toggle trigger coordinates using the native View Transitions API.
+- **Currency Switcher:** Native BDT formatting (`৳ 250,000.00`) with instant multi-currency switching (`৳ BDT`, `$ USD`, `€ EUR`).
 
 ---
 

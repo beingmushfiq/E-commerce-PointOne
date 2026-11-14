@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   ShoppingBag, Search, Sparkles, ArrowRight,
-  X, Package
+  X, Package, AlertTriangle, Lock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { ProductItem } from '../types/ui';
@@ -397,5 +397,229 @@ export const CommandPalette: React.FC<{
         </div>
       )}
     </AnimatePresence>
+  );
+};
+
+/* -------------------------------------------------------------------------- */
+/* 5. SKELETON LOADERS (ACCESSIBLE & STABLE LAYOUT)                          */
+/* -------------------------------------------------------------------------- */
+export const SkeletonTable: React.FC<{ rows?: number; columns?: number }> = ({
+  rows = 5,
+  columns = 4,
+}) => (
+  <div className="w-full overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 p-4 space-y-3 animate-pulse">
+    <div className="h-8 bg-zinc-100 dark:bg-zinc-800 rounded-xl w-1/4 mb-4" />
+    <div className="space-y-2">
+      {Array.from({ length: rows }).map((_, r) => (
+        <div key={r} className="flex gap-4 items-center">
+          {Array.from({ length: columns }).map((_, c) => (
+            <div
+              key={c}
+              className={`h-10 bg-zinc-100 dark:bg-zinc-800/80 rounded-lg ${
+                c === 0 ? 'w-2/5' : 'flex-1'
+              }`}
+            />
+          ))}
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+export const SkeletonCard: React.FC = () => (
+  <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 p-5 space-y-4 animate-pulse">
+    <div className="aspect-square w-full bg-zinc-100 dark:bg-zinc-800 rounded-xl" />
+    <div className="space-y-2">
+      <div className="h-4 bg-zinc-100 dark:bg-zinc-800 rounded w-2/3" />
+      <div className="h-3 bg-zinc-100 dark:bg-zinc-800/60 rounded w-1/2" />
+    </div>
+    <div className="flex justify-between items-center pt-2">
+      <div className="h-4 bg-zinc-100 dark:bg-zinc-800 rounded w-1/4" />
+      <div className="h-8 bg-zinc-100 dark:bg-zinc-800 rounded-xl w-1/3" />
+    </div>
+  </div>
+);
+
+/* -------------------------------------------------------------------------- */
+/* 6. EMPTY STATE CARD                                                        */
+/* -------------------------------------------------------------------------- */
+interface EmptyStateProps {
+  icon?: React.ReactNode;
+  title: string;
+  description: string;
+  actionText?: string;
+  onAction?: () => void;
+}
+
+export const EmptyStateCard: React.FC<EmptyStateProps> = ({
+  icon = <Package className="w-10 h-10 text-zinc-400" />,
+  title,
+  description,
+  actionText,
+  onAction,
+}) => (
+  <div className="flex flex-col items-center justify-center p-12 text-center rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/40">
+    <div className="p-3.5 rounded-2xl bg-zinc-100 dark:bg-zinc-800 mb-4 text-zinc-600 dark:text-zinc-300">
+      {icon}
+    </div>
+    <h3 className="font-serif font-bold text-lg text-zinc-900 dark:text-zinc-100 mb-1">
+      {title}
+    </h3>
+    <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mb-6 leading-relaxed">
+      {description}
+    </p>
+    {actionText && onAction && (
+      <EditorialButton onClick={onAction} size="sm" variant="primary">
+        {actionText}
+      </EditorialButton>
+    )}
+  </div>
+);
+
+/* -------------------------------------------------------------------------- */
+/* 7. PERMISSION DENIED NOTICE                                                */
+/* -------------------------------------------------------------------------- */
+export const PermissionDenied: React.FC<{
+  requiredRole?: string;
+  description?: string;
+  onBack?: () => void;
+}> = ({
+  requiredRole = 'Staff Privilege',
+  description = 'You do not have the required role permissions to view or perform operations in this domain.',
+  onBack,
+}) => (
+  <div className="min-h-[60vh] flex items-center justify-center p-6">
+    <div className="max-w-md w-full p-8 rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xl text-center">
+      <div className="w-12 h-12 mx-auto rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 flex items-center justify-center text-rose-600 dark:text-rose-400 mb-4">
+        <Lock className="w-6 h-6" />
+      </div>
+      <h3 className="font-serif font-bold text-xl text-zinc-900 dark:text-zinc-100 mb-2">
+        Access Restricted
+      </h3>
+      <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-4 leading-relaxed">
+        {description}
+      </p>
+      <div className="inline-block px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800 text-[11px] font-mono font-semibold text-zinc-600 dark:text-zinc-300 mb-6">
+        Required: {requiredRole}
+      </div>
+      {onBack && (
+        <div>
+          <EditorialButton onClick={onBack} variant="outline" size="sm">
+            Return to Authorized View
+          </EditorialButton>
+        </div>
+      )}
+    </div>
+  </div>
+);
+
+/* -------------------------------------------------------------------------- */
+/* 8. DESTRUCTIVE CONFIRMATION MODAL                                          */
+/* -------------------------------------------------------------------------- */
+export const DestructiveConfirmModal: React.FC<{
+  isOpen: boolean;
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  isDangerous?: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}> = ({
+  isOpen,
+  title,
+  message,
+  confirmLabel = 'Confirm Action',
+  isDangerous = true,
+  onConfirm,
+  onCancel,
+}) => (
+  <AnimatePresence>
+    {isOpen && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          className="max-w-md w-full bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-2xl"
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <div className={`p-2.5 rounded-xl ${isDangerous ? 'bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400' : 'bg-amber-100 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400'}`}>
+              <AlertTriangle className="w-5 h-5" />
+            </div>
+            <h4 className="font-serif font-bold text-lg text-zinc-900 dark:text-zinc-100">
+              {title}
+            </h4>
+          </div>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-6 leading-relaxed">
+            {message}
+          </p>
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={onCancel}
+              className="px-4 py-2 text-xs font-semibold rounded-xl text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onConfirm}
+              className={`px-4 py-2 text-xs font-semibold rounded-xl text-white shadow transition cursor-pointer ${
+                isDangerous
+                  ? 'bg-rose-600 hover:bg-rose-700'
+                  : 'bg-amber-600 hover:bg-amber-700'
+              }`}
+            >
+              {confirmLabel}
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    )}
+  </AnimatePresence>
+);
+
+/* -------------------------------------------------------------------------- */
+/* 9. SEMANTIC BADGE & STATUS PULSE                                           */
+/* -------------------------------------------------------------------------- */
+export const Badge: React.FC<{
+  children: React.ReactNode;
+  variant?: 'success' | 'warning' | 'danger' | 'info' | 'neutral' | 'accent';
+  size?: 'sm' | 'md';
+}> = ({ children, variant = 'neutral', size = 'sm' }) => {
+  const styles = {
+    success: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800',
+    warning: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800',
+    danger: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800',
+    info: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800',
+    neutral: 'bg-zinc-100 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700',
+    accent: 'bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-700',
+  };
+
+  const sizes = {
+    sm: 'px-2 py-0.5 text-[10px]',
+    md: 'px-2.5 py-1 text-xs',
+  };
+
+  return (
+    <span className={`inline-flex items-center gap-1.5 rounded-full font-mono font-medium border ${styles[variant]} ${sizes[size]}`}>
+      {children}
+    </span>
+  );
+};
+
+export const StatusPulse: React.FC<{ status: 'healthy' | 'warning' | 'error' | 'idle' }> = ({ status }) => {
+  const colors = {
+    healthy: 'bg-emerald-500',
+    warning: 'bg-amber-500',
+    error: 'bg-rose-500',
+    idle: 'bg-zinc-400',
+  };
+
+  return (
+    <span className="relative flex h-2 w-2">
+      {status !== 'idle' && (
+        <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${colors[status]}`} />
+      )}
+      <span className={`relative inline-flex rounded-full h-2 w-2 ${colors[status]}`} />
+    </span>
   );
 };

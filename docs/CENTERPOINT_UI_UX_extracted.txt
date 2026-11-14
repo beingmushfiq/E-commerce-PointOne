@@ -1,0 +1,904 @@
+CENTERPOINT
+UI / UX DESIGNSPECIFICATION
+Three connected experiences. One coherent commerce platform.
+DOCUMENT
+VALUE
+Product
+CENTERPOINT — modular commerce platform, standalone edition and multi-tenant SaaS
+Prepared for
+Product, design and engineering implementation
+Prepared by
+DevCenterPoint
+Version
+1.0 — agreed direction
+Date
+15 November 2026
+Repository
+github.com/beingmushfiq/E-commerce-PointOne
+DESIGN MANDATE
+Design three clearly differentiated experiences: a configurable multi-industry customer storefront; one unified merchant Store Studio containing a full-screen visual CMS; and a role-governed SaaS Master Control Panel. Preserve a shared design language without forcing identical layouts or workflows.
+SOURCE OF TRUTH
+Repository reviewed: E-commerce-PointOne  |  Default branch: main  |  Review scope: README, master plan, frontend application, Studio CMS, Master Control Center, screenshot specification and agent guidance.
+Contents
+01   Executive design brief
+02   Confirmed product decisions
+03   Product experience architecture
+04   Shared design system
+05   Experience A — Customer storefront
+06   Experience B — Store Studio
+07   Full-screen visual CMS workspace
+08   Experience C — Master Control Panel
+09   Role-based access and governance
+10   Responsive behavior and interaction standards
+11   Accessibility, performance and trust
+12   Information architecture and route map
+13   Repository alignment and implementation guardrails
+14   Delivery roadmap and acceptance criteria
+15   Screen inventory and design handoff checklist
+HOW TO USE THIS DOCUMENT
+Treat this as the product-level UX contract for design and implementation. Validate existing routes, APIs, schema and permissions before binding any screen to data. Where a capability is described as a target, it is a design requirement—not a claim that the current branch already implements it.
+01. Executive design brief
+CENTERPOINT is a modular commerce platform intended to serve independent merchants and growing businesses through two deployment modes: standalone commercial software and a centrally operated multi-tenant SaaS edition. Its UI must make that architecture understandable without exposing technical complexity to customers or merchants.
+The product is composed of three experiences with different primary jobs:
+EXPERIENCE
+PRIMARY USER
+PRIMARY JOB
+DESIGN CHARACTER
+Storefront
+Shopper / customer
+Discover, evaluate, purchase and track products.
+Brand-led, expressive, fast, reassuring.
+Store Studio
+Merchant owner and store team
+Operate commerce, inventory, finance, marketing and content.
+Productive, information-rich, predictable.
+Master Control
+CENTERPOINT platform personnel
+Operate tenants, subscriptions, platform services, security and support.
+Authoritative, controlled, observability-led.
+Design outcomes
+Clear separation between customer, tenant-staff and platform-operator workflows.
+High-quality multi-industry storefront themes, rather than one generic storefront layout.
+One Store Studio application with a full-screen page-building workspace—not a separate CMS product.
+Role-based Master Control access from the first release, with least-privilege permissions and traceable privileged actions.
+Consistent visual language, navigation logic, component behavior and state handling across the ecosystem.
+Honest, data-backed interfaces: no fabricated KPIs, simulated health indicators or decorative actions presented as operational features.
+Non-goals
+This document does not prescribe a new backend architecture or replace the existing Laravel domain model.
+This document does not imply that all target modules are already implemented or production-verified.
+The Master Control Panel must not become the place where tenant-specific daily store operations happen.
+The CMS must not allow tenant-authored code to execute in the privileged Studio origin.
+02. Confirmed product decisions
+DECISION
+CONFIRMED DIRECTION
+DESIGN CONSEQUENCE
+Storefront strategy
+C — Multi-industry theme system, with luxury editorial as the flagship demonstration.
+Provide configurable theme presets and industry-specific page patterns while preserving one coherent commerce engine.
+Merchant workspace
+One unified Store Studio. The visual CMS is a dedicated, full-screen workspace inside Studio.
+Keep merchant navigation, identity, permissions and context continuous. Enter and exit the builder without switching products.
+Platform access
+Role-based access from the beginning.
+Define platform roles, permission groups, scoped actions, approvals for sensitive operations and audit trails.
+Product design principles
+PRINCIPLE
+WHAT IT MEANS IN PRACTICE
+One platform, three experiences
+Share foundations, not identical shells. Each experience optimizes for its user and task.
+Progressive disclosure
+Expose the next useful action first; put advanced configuration behind clear contextual controls.
+Merchant confidence
+Make prices, stock, fulfillment, financial balances and publishing status explicit and explainable.
+No dead ends
+Every empty state provides a relevant next step. Every error explains recovery where possible.
+Safe by default
+Permission boundaries, destructive-action confirmation, draft previews and secure custom-code isolation are UX requirements.
+Responsive by design
+Support touch and narrow screens; complex data tables and visual editing adapt rather than merely shrink.
+Customization without chaos
+Tenant branding can vary while navigation, semantics, accessibility and operational patterns remain consistent.
+03. Product experience architecture
+The experience architecture should reflect the platform’s trust boundaries and the real mental models of its users. Storefront, Studio and Master Control are separate route-level applications within the broader platform, even if they share a frontend deployment or component package.
+CUSTOMER / PUBLIC DOMAIN  Storefront  →  product discovery  →  cart  →  checkout  →  customer accountTENANT / STORE DOMAIN  Store Studio  →  commerce operations  →  inventory & finance  →  marketing               ↘  Store Design  →  full-screen Visual CMS  →  preview / publishPLATFORM / CONTROL DOMAIN (SaaS edition only)  Master Control  →  tenants  →  plans & billing  →  infrastructure                 →  security & audit  →  support operations
+Context boundaries
+BOUNDARY
+OWNS
+MUST NOT OWN
+Storefront
+Public catalog experience, customer-facing content, cart/checkout, customer account and public trust signals.
+Merchant controls, platform settings or privileged staff operations.
+Store Studio
+Tenant catalog, orders, inventory, procurement, accounting, marketing, analytics, content, theme and store settings.
+Other tenants’ business records or SaaS-wide infrastructure controls.
+Visual CMS workspace
+Tenant page composition, templates, theme tokens, preview, draft/review/publish and revision history.
+Arbitrary privileged execution or direct access to platform secrets.
+Master Control
+Central tenant registry, plan entitlements, subscriptions, central billing, domains, platform operators, service health and platform security.
+Routine tenant bookkeeping, day-to-day product editing or bypassing tenant data isolation.
+STANDALONE EDITION RULE
+Standalone installations still use Storefront and Store Studio. SaaS Master Control routes and central-tenant workflows are unavailable or hidden in standalone mode; core commerce must not depend on Master Control to function.
+04. Shared design system
+Retain the repository’s existing CENTERPOINT visual foundation—warm alabaster, obsidian and champagne amber—then formalize it into semantic tokens. The system should be premium but restrained: warmth and craft for commerce, precision and clarity for operations.
+Core palette
+TOKEN
+HEX
+USE
+GUIDANCE
+Canvas / light
+#FAFAF9
+Default light page background.
+Warm neutral, not cold pure grey.
+Canvas / dark
+#09090B
+Dark-mode and Master Control foundation.
+Use for deep surfaces, not every card.
+Surface / light
+#FFFFFF
+Cards, panels, dialogs and editors.
+Preserve clear surface hierarchy.
+Surface / dark
+#121215
+Dark cards and navigation surfaces.
+Separate using border and tone, not excessive glow.
+Border / light
+#E4E4E7
+Subtle boundaries and dividers.
+Keep borders low contrast but visible.
+Accent / champagne
+#D97706
+Primary brand accent and focused calls to action.
+Use sparingly; never use as a universal status color.
+Accent / dark
+#F59E0B
+Dark-mode accent adjustment.
+Check contrast with dark text and surfaces.
+Semantic success
+#147D64
+Successful completion and healthy states.
+Pair color with icon and text.
+Semantic danger
+#B42318
+Destructive actions, critical failures.
+Avoid alarm styling for non-critical issues.
+Information
+#2563EB
+Informational links and selected system cues.
+Do not confuse with tenant brand accents.
+Typography
+ROLE
+TYPEFACE
+APPLICATION
+Editorial display
+Cormorant Garamond
+Storefront hero, brand storytelling and selective large titles. Not used for dense UI labels.
+Interface / body
+Plus Jakarta Sans
+Navigation, product data, forms, headings, tables and long-form content.
+Numeric / technical
+JetBrains Mono
+SKUs, order IDs, timestamps, IDs, code, system metrics and aligned financial figures.
+Layout and component rules
+Use a consistent spacing scale based on 4px increments; favor 8px and 12px rhythm for dense operational layouts.
+Use 8–12px corner radii for operational components and 12–18px for large cards and surfaces. Avoid making every control pill-shaped.
+Use a clear 12-column desktop grid with a comfortable maximum content width; the storefront may use wider full-bleed editorial sections.
+Use consistent icon sizing and stroke weight. Icons supplement labels and should not replace critical navigation text.
+Data tables should prioritize scannability: sticky headers where useful, aligned numeric columns, compact row density controls and clear filters.
+Use elevation only to clarify layering: dropdowns, menus, dialogs and floating inspectors. Do not cover every card in shadows.
+Keep tenant brand tokens separate from platform-admin tokens. Tenant theme changes must never recolor the Master Control security or billing interface.
+Theme ownership and inheritance
+LEVEL
+CONTROLS
+BOUNDARY
+Platform defaults
+Approved base tokens, typography options, theme capabilities, template availability and global accessibility guardrails.
+Platform defaults are starting points, not an override of every tenant’s brand.
+Tenant brand
+Logo, brand colors, fonts from an approved set, border radius range, imagery, header/footer and theme preset.
+Apply only to the tenant storefront and CMS preview.
+Page / section
+Content, layout, spacing, alignment, media, section-specific styling and responsive overrides.
+Respect global tokens and allowed design constraints.
+Customer preference
+Light/dark where supported, locale, currency and accessibility preferences.
+Never override merchant business settings such as base price or tax configuration.
+05. Experience A — Customer storefront
+AUDIENCE: VISITORS, SHOPPERS AND RETURNING CUSTOMERS
+The storefront is the merchant’s public brand experience. It should communicate product value quickly, remove friction from shopping and feel appropriate to the merchant’s industry. The same commerce engine can power distinct storefront themes without making every store look alike.
+Storefront global shell
+Announcement bar: optional delivery promotion, campaign message or service notice; dismissible where configured.
+Header: brand mark, primary navigation, search, locale/currency where supported, account, wishlist and cart.
+Mobile header: compact brand, search, account/cart shortcuts and an accessible navigation drawer.
+Footer: customer service, policies, contact details, social links, payment/shipping trust marks and newsletter where enabled.
+Global search overlay: predictive results, categories, products and recent searches; keyboard and screen-reader friendly.
+Core customer screens
+SCREEN
+CONTENT & COMPONENTS
+PRIMARY ACTION / UX RULE
+Home
+Hero or campaign feature; department navigation; collection cards; curated products; editorial/storytelling sections; trust and service information; reviews; FAQ; newsletter.
+Lead with a merchant-specific value proposition. Let merchants reorder, hide or configure sections through CMS.
+Collection / category
+Title and description; breadcrumb; category navigation; product grid; sort; filters; result count; pagination or incremental loading.
+Filters should remain visible and stateful. Provide clear filter chips and a one-action reset.
+Search results
+Search query, suggestions, result count, filters, typo tolerance, product and category results.
+Retain the query and filters when navigating back. Show a useful no-results recovery state.
+Product detail
+Gallery, product title, pricing, variant matrix, stock state, delivery estimate, description/specifications, reviews, related products.
+Disable invalid variants; reflect actual availability; explain delivery and return expectations.
+Cart
+Line items, selected variants, quantity controls, availability notes, coupon, shipping estimate and subtotal.
+Revalidate price and stock server-side. Do not silently change quantities or totals.
+Checkout
+Contact, delivery address, shipping option, payment choice, coupon and order summary.
+Minimize steps, preserve entered data on recoverable errors and clearly identify required fields.
+Order status
+Order reference, timeline, shipment tracking, payment status, delivery address summary and support route.
+Display only confirmed status transitions and explain delays or action required.
+Customer account
+Profile, saved addresses, orders, wishlist, notifications, returns/support and security settings.
+Make guest checkout possible if enabled; offer account creation after purchase without losing order context.
+Multi-industry theme system
+Treat themes as structured storefront configurations and page patterns, not independent applications. Each theme may change composition, typography, imagery ratios, content hierarchy and product merchandising, while reusing common accessibility and commerce components.
+THEME FAMILY
+VISUAL CHARACTER
+KEY LAYOUT PATTERNS
+Luxury / editorial
+Large image-led storytelling, restrained palette, generous whitespace, refined serif display.
+Full-width hero; editorial collection stories; curated product grid; premium service narrative.
+Electronics / technology
+Information-dense but organized; specifications, comparison and trust information are prominent.
+Category shortcuts; filter-rich listing; spec-first PDP; comparison, warranty and delivery blocks.
+Fashion / lifestyle
+Campaign photography, seasonal collections, size/color variants and visual merchandising.
+Editorial campaigns; collection tiles; size guide; swatch-led variants; lookbook and related items.
+Beauty / personal care
+Ingredient, benefit and routine education with clear product imagery.
+Concern/routine navigation; ingredient and how-to sections; bundles; review and usage content.
+Home / furniture
+Room context, dimensions, materials, delivery and configuration.
+Room/category collections; contextual imagery; dimensions/specs; delivery/assembly information.
+Grocery / daily needs
+Fast repeat purchase, categories, availability and clear unit pricing.
+Dense category navigation; quick add; unit/pack details; reorder and delivery slots where supported.
+B2B / wholesale
+Account-specific price visibility, pack quantities, quote/reorder and tier logic.
+Trade catalog; case-pack quantities; tiered pricing; quote or account approval flow where enabled.
+FLAGSHIP DEMONSTRATION
+Use Luxury / Editorial as the CENTERPOINT showcase theme because it makes the visual identity memorable. Demonstrate at least two contrasting presets—such as Electronics and Fashion—so the multi-industry capability is immediately believable.
+Product detail and checkout rules
+Price, discount, tax, shipping and totals must be sourced from authoritative server calculations.
+Stock availability must distinguish in stock, low stock (only where the business permits disclosure), unavailable and backorder/preorder states.
+Variants must be represented as a clear matrix or selectors; the selected SKU and price must be unambiguous.
+Payment gateway options should appear only when configured and available for the tenant, currency and order context.
+Bangladesh-ready fields should support local phone formats, district/city/area data and clear delivery notes; international fields remain configurable.
+Never claim a payment is successful based only on a client-side return URL. Show pending verification until the server confirms the transaction.
+06. Experience B — CENTERPOINT Store Studio
+AUDIENCE: MERCHANT OWNERS, MANAGERS AND AUTHORIZED STORE STAFF
+Store Studio is the single merchant workspace for operating a store. Its shell should remain stable while the active module changes. The full-screen visual CMS is entered from Store Design and remains inside the same authenticated merchant context.
+Studio shell
+REGION
+RECOMMENDED CONTENT
+BEHAVIOR
+Left navigation
+Store identity and tenant switcher (only when user has access); grouped module navigation; collapse control; optional pinned/favorites.
+Persistent on desktop; overlay or compact drawer on mobile. Current module and active subsection are obvious.
+Top bar
+Breadcrumb/page title; global search or command menu; help; notifications; theme control; user menu.
+Search respects user permissions. Notifications link to the underlying record or task.
+Context strip
+Store name/domain, environment/status and relevant filters (warehouse, channel or date range).
+Make current tenant and operating context visible to prevent cross-store mistakes.
+Main workspace
+Module-specific content: overview, table, detail, form, report or editor.
+Use consistent page header, primary action placement and loading/error states.
+Side panel / drawer
+Quick details, activity timeline, filters or supporting context.
+Use for secondary tasks; do not hide the entire workflow inside stacked dialogs.
+Proposed Studio navigation
+GROUP
+NAVIGATION ITEMS
+NOTES
+Overview
+Dashboard · Alerts · Activity
+Role-personalized summaries; no duplicate menu for every KPI.
+Commerce
+Orders · Returns / Refunds · POS · Customers
+Order state and customer journey are central.
+Catalog
+Products · Variants · Categories · Brands · Collections / Bundles
+Catalog is separate from physical stock ledger.
+Inventory
+Stock overview · Warehouses · Transfers · Movements · Suppliers · Purchase orders
+Show warehouse context and immutable movement history.
+Finance
+Finance overview · Chart of accounts · Journals · Expenses · Payments · Reports
+Use double-entry concepts without exposing accounting complexity to non-finance roles.
+Marketing
+Campaigns · Coupons · Automation · Pixels & events · Attribution · Product feeds
+Consent and event status are visible; avoid vanity-only metrics.
+Intelligence
+Analytics · Reports · AI assistants
+AI suggestions should cite the data or records used.
+Store Design
+Visual builder · Pages · Themes · Navigation · Media library · Header & footer
+Visual builder opens in dedicated full-screen workspace.
+Content
+Blog · FAQs · Reviews · Banners / sliders
+Editorial workflows with preview and publish status.
+Integrations
+Payments · Couriers · Channels / marketplaces · Webhooks / API
+Tenant-level credentials and provider state; secrets masked.
+Administration
+Team · Roles & permissions · Store settings · Activity log
+Permission changes require deliberate review; critical changes audited.
+Studio dashboard
+The dashboard should be actionable rather than a wall of decorative KPI cards. Prioritize the merchant’s current operating decisions.
+DASHBOARD REGION
+RECOMMENDED CONTENT
+Page header
+Welcome/context, current store, date range, channel/warehouse filters as relevant, primary “Create order” or “Add product” action based on permissions.
+Business snapshot
+Net sales/revenue, orders, average order value, refunds/returns or other approved KPIs—each with definition, comparison period and timestamp.
+Work to do
+Unfulfilled orders, low-stock items, payment exceptions, pending returns, failed integrations, scheduled content needing approval.
+Performance view
+Sales over time, top products/categories, channel mix and campaign performance where real data exists.
+Operational status
+Payment/courier integration status, stock synchronization state, queue or sync warnings where meaningful.
+Recent activity
+Recent orders, refunds, inventory movements, published pages and staff actions filtered by role.
+Core module design patterns
+MODULE
+LIST / OVERVIEW
+DETAIL / ACTION WORKSPACE
+Products
+Search, filters, category, status, stock hint, price, SKU, updated time and bulk actions.
+Product overview, media, descriptions, variant matrix, pricing, channel visibility, SEO and audit history.
+Orders
+Order ID, customer, date, amount, payment, fulfillment and state. Saved views for work queues.
+Order timeline, immutable line-item snapshot, payment verification, shipment, notes, invoice and authorized transitions.
+Inventory
+Warehouse selector, available/reserved/on-hand, low-stock and movement filters.
+Movement ledger, adjustment reason, transfer workflow, purchase receipt and per-warehouse history.
+Accounting
+Account balances and report shortcuts with period and entity context.
+Journal detail, balanced debit/credit display, attachments, reversal action and approval/audit history.
+Marketing
+Campaign state, audience/segment, scheduled time and measurable results.
+Content, target, budget/spend where connected, event diagnostics, consent state and attribution detail.
+Analytics
+Metric definitions, date comparison, filters and export.
+Drill through chart/table to source records; show freshness and attribution caveats.
+Integrations
+Provider cards with connected / action required / disconnected state.
+Configuration wizard, test connection, last successful sync, logs, credential masking and remove/reconnect workflow.
+Unified workflows
+Product to storefront: create or import product → configure variants and price → assign stock/warehouse → add media and SEO → preview channel → publish.
+Order to fulfillment: order received → payment status verified → reserve/commit inventory → pick/pack → book courier → dispatch → delivery/exception → return/refund if applicable.
+Content to live page: create draft → edit in visual builder → preview devices → run validation → submit for review if required → publish or schedule → monitor version history.
+Finance correction: inspect posted entry → create compensating reversal with reason and reference → post corrected entry through authorized workflow. Never edit an immutable posted journal silently.
+07. Full-screen visual CMS workspace
+A DEDICATED WORKSPACE INSIDE STORE STUDIO
+The visual CMS is a full-screen editing mode inside Store Studio, not a separate application, login or merchant product. It should preserve the merchant’s Store Studio identity, current tenant context and permission model while giving the canvas enough room to support serious page composition.
+Editor layout
+REGION
+CONTENTS
+KEY INTERACTIONS
+Top command bar
+Exit to Studio; page name and save state; undo/redo; preview; device selector; draft/publish status; publish action; help.
+Autosave state is explicit. Publish requires validation and confirmation. Unsaved changes are protected on exit.
+Left panel — Structure
+Page/section tree, add section, component library, reusable blocks, media and layers.
+Drag reorder, select, duplicate, hide, delete, lock and group where supported. Keyboard alternatives must exist.
+Center canvas
+Interactive page preview with selection outlines, responsive viewport and contextual insertion points.
+Click-to-select, drag-and-drop, inline text editing and responsive canvas resizing.
+Right panel — Inspector
+Content, layout, style, responsive overrides, link/action, visibility, accessibility and SEO fields contextual to selection.
+Inspector changes apply only to the selected block; reset-to-token is available for overridden values.
+Bottom / status area
+Viewport dimensions, validation warnings, selected element path and optional history indicator.
+Warnings are actionable and linked to the element or field that needs attention.
+Editor interaction model
+Selecting a section in the canvas synchronizes selection in the layer tree and inspector.
+Adding a component opens a searchable library grouped by content, commerce, navigation, trust and layout.
+Drag-and-drop must show a clear insertion target and preserve predictable focus for keyboard users.
+Device switching previews breakpoints; it must not silently change the page’s saved breakpoint-specific settings.
+Undo and redo operate on the editor session with clear limits; autosave and revision history remain server-backed.
+Preview opens a customer-facing draft preview in a safe, isolated context; it must not publish the draft.
+Publishing shows the changes, destination, schedule, approver if required and any SEO/accessibility warnings.
+Exiting the editor returns to the originating Studio page or Store Design overview, not an unrelated storefront route.
+Content and component library
+CATEGORY
+EXAMPLES
+REQUIRED SETTINGS
+Layout
+Container, grid, columns, spacer, divider, sticky region.
+Width, max-width, alignment, gap, responsive stacking, spacing.
+Navigation
+Header, mega menu, breadcrumbs, footer, announcement bar.
+Menu source, logo, links, sticky behavior, mobile behavior and accessibility labels.
+Commerce
+Product grid, featured product, collection, category cards, search, add-to-cart CTA.
+Catalog source, filters, sorting, display density, price/stock visibility and CTA behavior.
+Editorial
+Hero, image/text split, rich text, video/embed, quote, story, blog list.
+Content, media focal point, crop, typography, alignment, overlay and link.
+Trust & conversion
+Reviews, trust badges, shipping/returns, FAQ, newsletter, payment badges.
+Data source, consent, display rules, content and visibility.
+Promotional
+Campaign banner, countdown (if supported), coupon callout, product bundle.
+Campaign reference, schedule, CTA, audience and truthful expiry/status.
+Custom / advanced
+Approved custom HTML/CSS and integrations.
+Sandboxed rendering, CSP profile, validation, explicit permission and audit log.
+Page lifecycle and publishing
+DRAFT  →  PREVIEW  →  VALIDATE  →  REVIEW (if required)  →  SCHEDULE / PUBLISH  ↑                                                           ↓  └──────────── EDIT / RESTORE VERSION  ←──── REVISION HISTORY
+STATE
+EXPECTED UX
+Draft
+Private editing state, clear unsaved/saved indicator, last saved timestamp and editor attribution.
+Preview
+Shareable or authenticated preview token with expiry and tenant binding; no unintended publication.
+Validation
+Broken links, missing alt text, empty required fields, SEO omissions, invalid component data and unsafe custom code flagged.
+Review
+Reviewer sees diff/preview, comments if supported, author and requested publication date; approve/reject with reason.
+Scheduled
+Explicit timezone and scheduled time; visible cancellation or edit path before execution.
+Published
+Published version ID, published by/at, live preview link and rollback route.
+Archived / restored
+Old revision remains inspectable; restoration creates a new revision rather than deleting history.
+SECURITY REQUIREMENT
+Tenant custom HTML/CSS/JS must run in a sandboxed iframe with a strict Content Security Policy and no privileged Studio-origin access. The editor should communicate trust boundaries clearly and require an authorized role for custom code.
+08. Experience C — Master Control Panel
+AUDIENCE: CENTERPOINT PLATFORM OPERATORS
+Master Control is the operational command center for the SaaS platform. It manages the central tenant registry, subscriptions, plan entitlements, platform identity, domains, infrastructure health, security and support operations. It does not run individual merchants’ day-to-day businesses.
+Master Control shell
+REGION
+CONTENT
+UX EXPECTATION
+Platform sidebar
+Command Center, Tenants, Commercial, Domains, Platform Users, Modules, Infrastructure, Security, Support Operations, System.
+Dark-first, compact and stable. Group by operational responsibility. Permission-aware navigation.
+Top bar
+Environment indicator, platform-wide search, alerts, incident state, operator identity and role.
+Clearly distinguish production from non-production. Avoid ambiguous environment color alone.
+Main canvas
+Operational dashboard, registries, record detail, configuration and incident workflows.
+Data freshness and source are visible. Destructive actions require explicit confirmation.
+Audit context
+Actor, role, target tenant/resource, action, time, result and correlation/reference ID.
+Show audit context close to privileged operations and make history searchable.
+Master Control information architecture
+GROUP
+SCREENS / CAPABILITIES
+IMPORTANT UX DETAILS
+Command Center
+Platform overview; operational alerts; incidents; recent administrative actions.
+Answer platform health, tenant activity, recurring revenue and pending risks immediately.
+Tenants
+Tenant directory; onboarding; provisioning; tenant detail; suspend/restore; status history.
+Search by tenant name, ID, domain or status. Lifecycle actions are explicit and auditable.
+Commercial
+Plans; feature entitlements; subscriptions; invoices; payment events; credits/adjustments.
+Separate recurring revenue from collected cash. Explain billing state and renewal dates.
+Domains
+Domain registry; custom-domain mapping; verification; SSL certificate state.
+Show verification steps, DNS expectations, current certificate and retry path.
+Platform Users
+Platform operators; roles; permission groups; sessions; invitations.
+MFA / secure sign-in UX and least-privilege role assignment.
+Modules & Features
+Module catalog; feature flags; tenant entitlements; release availability.
+Show plan availability, dependencies, rollout scope and effective tenant count.
+Infrastructure
+Central and tenant DB probes; cache; queue; storage; mail; API performance; backups.
+Real probes only; show last check, latency, affected scope and current incident.
+Integrations
+Platform-owned provider credentials, webhook delivery, provider incidents and defaults.
+Clearly distinguish platform integration from tenant-owned provider setup.
+Security
+Audit trail; authentication events; access reviews; suspicious activity; configuration changes.
+Filterable evidence, retention policy and export governed by role.
+Support Operations
+Support cases; tenant timeline; authorized impersonation/support access if provided.
+Use time-bound, reason-bound, audited access; never silent impersonation.
+System
+Platform settings; maintenance; release/configuration status; data retention.
+Require elevated permission and confirmation for platform-wide changes.
+Command Center dashboard
+REGION
+METRICS / INFORMATION
+INTERACTION
+Platform health
+Overall status by service, incident count, failed probes, data freshness.
+Click through to service detail and affected tenants; show probe time and measurement.
+Tenant overview
+Total tenants by lifecycle state; active, trial, past-due, suspended and provisioning.
+Open filtered tenant registry. Definitions and counts are consistent with registry.
+Commercial health
+MRR/ARR where definitions are implemented; renewals; overdue invoices; failed payments; churn indicators.
+Show period, currency, included/excluded states and reconciliation/source.
+Provisioning pipeline
+Queued, in progress, failed and completed provisioning jobs.
+Open job trace, retry eligibility and failure cause. Avoid blind repeat actions.
+Security and support
+Recent critical audit events, access anomalies, support escalations and unresolved incidents.
+Role-filtered visibility and actionable investigation paths.
+Platform activity
+Recent tenant onboarding, plan changes, domain events, releases and operator actions.
+Timeline is searchable and linked to records/audit entries.
+Tenant detail workspace
+Identity: tenant ID, legal/business name, owner contact, created date, region and lifecycle status.
+Commercial: plan, feature entitlements, subscription state, billing cycle, invoices, payment status and renewal.
+Domains: primary domain, aliases, verification status, SSL state and domain history.
+Infrastructure: tenant database identity/status, storage usage, queue and sync health, last successful backup if available.
+Usage: actual measured usage against plan limits, measurement period and source.
+Lifecycle: provisioning events, suspension/restoration history, migrations and support actions.
+Security: relevant tenant access and administrative audit events, visible only to authorized roles.
+Actions: edit metadata, change plan/entitlements, retry supported operation, suspend/restore or initiate support workflow with safeguards.
+Privileged-action patterns
+ACTION TYPE
+REQUIRED UX SAFEGUARDS
+Suspend tenant
+Show impact, affected domain/store behavior, billing implications, reason, operator identity and confirmation. Offer cancel.
+Change plan / entitlement
+Preview resulting limits and feature access; indicate effective date and billing impact; capture reason.
+Provision / retry
+Show prerequisites, progress, idempotency/reference, failure detail and retry eligibility. Prevent accidental duplicate provisioning.
+Access tenant support context
+Explicit support purpose, time-limited scope, tenant notice or policy as appropriate, visible banner and immutable audit event.
+Platform-wide configuration
+Permission gate, impact summary, confirmation, staged/rollback strategy where possible and post-change verification.
+Delete / irreversible action
+Avoid hard delete for operational records. Use lifecycle state or retention-safe workflow; exceptional deletion requires elevated approval and audit.
+09. Role-based access and governance
+Role-based access should be designed now, not added after the navigation and screens have been built. The interface must be driven by backend-authoritative permissions. Hiding a button is not authorization.
+Platform role model — proposed starting point
+ROLE
+PRIMARY RESPONSIBILITY
+EXAMPLE PERMISSION SCOPE
+Platform Superadmin
+Platform ownership and exceptional governance.
+Full platform administration, role governance, critical configuration and emergency controls; strongest authentication and audit requirements.
+Platform Operations
+Tenant lifecycle and service operations.
+Tenant provisioning/suspension workflows, domain operations, service health and incident handling; no default access to financial secrets.
+Platform Finance
+Subscription and platform revenue operations.
+Plans, invoices, payments, refunds/credits where supported, reconciliation and financial exports; no infrastructure administration.
+Platform Support
+Tenant support and troubleshooting.
+Read tenant context, review logs within scope, create support actions and request time-bound access; no unrestricted data mutation.
+Platform Security / Auditor
+Security investigation and compliance evidence.
+Read audit logs, access events, policy settings and security configuration; tightly controlled write privileges.
+Platform Technical Admin
+Infrastructure and integration operations.
+DB/cache/queue/storage/mail probes, integration health, release configuration and controlled maintenance; no automatic commercial permissions.
+Tenant role model — proposed starting point
+ROLE
+PRIMARY RESPONSIBILITY
+DEFAULT SCOPE
+Store Owner
+Business owner and tenant-level administrator.
+Store settings, team invitations, role assignment within allowed limits, commercial configuration and all enabled business modules.
+Store Admin / Manager
+Runs store operations.
+Catalog, orders, inventory and selected marketing/content tasks; finance access configurable.
+Catalog Manager
+Maintains catalog and merchandising.
+Products, variants, categories, collections, media and catalog-related SEO.
+Order / Fulfillment Staff
+Processes customer orders.
+Order view/update transitions, picking/packing, shipment and customer communication within scope.
+Inventory Manager
+Controls warehouses and stock movements.
+Warehouse, movements, transfers, suppliers and purchase receiving; financial posting restricted by default.
+Accountant / Finance
+Maintains financial records and reports.
+Accounting, expenses, journal review/posting, settlement and finance reports according to approval policy.
+Marketing / Content Editor
+Creates campaigns and store content.
+Marketing, CMS pages, media and campaign analytics; publish approval can be separate.
+Customer Support
+Handles customer service.
+Customer/order read, permitted notes and approved service actions; no price, accounting or user-admin access by default.
+Analyst / Read-only
+Reviews store performance.
+Read-only access to explicitly granted modules and exports; no mutation or publishing.
+Permission dimensions
+DIMENSION
+EXAMPLES / EXPECTATION
+Resource
+Products, orders, stock, journals, pages, staff, tenant records, platform settings.
+Action
+View, create, edit, delete/archive, approve, publish, export, refund, reverse, provision, suspend, impersonate/support-access.
+Scope
+Own records, assigned warehouse, selected channel, all records in one tenant, selected tenants or platform-wide.
+Sensitivity
+Normal, financial, personal data, credentials/secrets, destructive, privileged support or security-critical.
+Context
+Active tenant, environment, current workflow state, approval state and time-limited access grant.
+Access-control UX requirements
+Navigation, page actions, bulk actions, exports and record fields must be permission-aware.
+Permission-denied states should explain that access is restricted and identify the appropriate administrator path without exposing protected data.
+Role assignment should show a readable permission summary, not only a role name.
+High-risk permissions (refund, journal posting/reversal, publish, staff administration, tenant suspension, support access and platform-wide configuration) should be separately visible.
+Where dual approval is required by business policy, the requester cannot approve their own action.
+All privileged actions create an audit record with actor, role, action, target, timestamp, result, reason and correlation ID.
+Backend policy is authoritative. The frontend must not infer access from a local role label or cached menu alone.
+10. Responsive behavior and interaction standards
+CONTEXT
+DESKTOP
+TABLET
+MOBILE
+Storefront
+Full navigation, spacious grids, side filters and wide product gallery.
+Compact header, 2–3 column grids, filters in drawer.
+Mobile navigation drawer, 2-column or 1-column grid as appropriate, sticky purchase CTA on PDP where useful.
+Store Studio
+Persistent sidebar, full data tables and multi-column forms.
+Collapsible sidebar, horizontal tab alternatives only for compact local sections, responsive tables.
+Navigation drawer, card/list data views or intentional horizontal table scroll, prioritized actions and stacked forms.
+Visual CMS
+Three-panel builder with large canvas.
+Collapsible inspector or layer panel; canvas remains primary.
+Not a shrunken desktop editor: use focused editing mode with one panel at a time, clear select/preview controls and supported component set.
+Master Control
+Persistent operator navigation and wide operational grids.
+Collapsible navigation and adaptive metric layout.
+Incident and tenant detail first; privileged actions remain deliberate; complex charts simplify without losing data meaning.
+Interaction and motion
+Use Framer Motion for local interface transitions and component feedback; reserve GSAP for intentional, scoped editorial or CMS preview sequences.
+Lenis smooth scrolling may be used for long editorial storefront pages, but should not interfere with form, table, keyboard or admin navigation behavior.
+Prefer 120–220ms for routine feedback and 180–300ms for modal/drawer transitions. Long decorative animations must never block task completion.
+Theme switching should use the existing circular reveal concept where supported, with a non-animated fallback and reduced-motion respect.
+Provide visible focus indicators, hover and pressed states, disabled states, loading feedback and clear focus restoration after dialogs.
+Use optimistic UI only for reversible actions and reconcile server responses. Financial, payment, stock, publish and lifecycle actions should wait for authoritative confirmation.
+Required UI states
+STATE
+DESIGN REQUIREMENT
+Loading
+Use skeletons that resemble the final layout; preserve stable layout to reduce movement. Show progress for longer operations.
+Empty
+Explain why no data is present and give one relevant next action. Distinguish never-created from filtered-to-zero.
+Error
+Human-readable explanation, reference/correlation ID when useful, retry or recovery step and no silent swallowing.
+Partial success
+Identify what succeeded and what failed; allow safe retry of only failed operations.
+Permission denied
+Explain the missing access at a high level without disclosing protected content.
+Offline / connection lost
+Show connection state, prevent unsafe duplicate submissions and explain whether changes are saved locally or not.
+Stale data
+Show last updated time and refresh path for metrics or integrations where freshness matters.
+Destructive confirmation
+Name the target and consequence; require explicit confirmation; stronger re-authentication for critical platform operations where appropriate.
+11. Accessibility, performance and trust
+Accessibility baseline
+WCAG 2.2 AA should be the target for all core user journeys.
+All interactive components support keyboard navigation and visible focus; focus order follows the visual hierarchy.
+Images provide useful alt text or are correctly marked decorative. CMS validation flags missing meaningful alt text.
+Form fields have persistent labels, instructions, required state, inline errors and summary where needed.
+Charts include concise text summaries and accessible data alternatives; color is never the only indicator.
+Use semantic headings, landmarks, table headers and accessible names for icon-only controls.
+Respect reduced-motion preferences and do not use flashing or motion that creates avoidable discomfort.
+Ensure tenant theme customizations cannot reduce contrast below approved thresholds for core interface elements.
+Performance expectations
+AREA
+UX / IMPLEMENTATION EXPECTATION
+Storefront
+Optimize imagery, responsive sources, lazy-load below-the-fold media and avoid blocking the first meaningful content.
+Studio / MCP
+Use server pagination, filtering and sorting for large datasets; virtualize exceptionally long lists only where justified.
+Navigation
+Keep route transitions responsive; load module bundles on demand where it improves user experience.
+Charts
+Avoid rendering every data point at once; preserve exact totals and provide downsampling only for visual representation.
+Editor
+Debounce autosave safely; avoid re-rendering the whole canvas for inspector changes; show save failures prominently.
+Reliability
+Use error boundaries, request cancellation, retry policies for transient failures and idempotent action flows.
+Privacy and security as UX
+Mask credentials and API secrets by default. Reveal or rotate only with explicit permission and secure server-side workflow.
+Never place tenant secrets in browser-readable global settings or public storefront configuration.
+Keep customer personal data out of analytics summaries unless the role and purpose justify access.
+Use tenant-aware navigation and labels to reduce the chance of operating on the wrong store.
+For exports, communicate the data scope and apply backend authorization and audit logging.
+For platform support access, show an unmistakable support-access banner and preserve a detailed audit trail.
+12. Information architecture and route map
+Use distinct route trees and layout boundaries. The route examples below are proposed URL patterns; reconcile them with existing React Router and Laravel route conventions before implementation. Avoid relying on hash-only view switching for the finished product.
+PUBLIC STOREFRONT/                         Home/collections/:slug        Collection/products/:slug           Product detail/search                   Search results/cart                     Cart/checkout                 Checkout/account/*                Customer account/orders/:reference        Order tracking (authorized / secure token)TENANT STORE STUDIO/studio                   Studio overview/studio/orders/*          Orders & fulfillment/studio/products/*        Catalog/studio/inventory/*       Warehouses & stock ledger/studio/finance/*         Accounting & finance/studio/marketing/*       Campaigns & attribution/studio/analytics/*       Reports and insights/studio/store-design      CMS overview/studio/editor/:pageId    Full-screen visual CMS workspace/studio/content/*         Blog, FAQ, reviews and media/studio/integrations/*    Tenant provider connections/studio/settings/*        Team, roles and store settingsPLATFORM MASTER CONTROL (SAAS EDITION)/platform                 Command Center/platform/tenants/*       Tenant registry and detail/platform/commercial/*    Plans, subscriptions, invoices/platform/domains/*       Domain verification and SSL/platform/operators/*     Platform users and roles/platform/modules/*        Feature entitlements and flags/platform/infrastructure/* Service health and probes/platform/security/*       Audit and security events/platform/support/*         Support operations
+Navigation rules
+Keep the active tenant/store context visible in Studio and preserve it when navigating between modules.
+Breadcrumbs should reflect the true hierarchy and allow safe return to parent records.
+Use deep links for records and workflow states where permission allows; returning from a detail view should preserve list filters and pagination.
+Use route-level guards for customer, staff and platform identities; never rely on a visible navigation item as the authorization boundary.
+Standalone builds must not expose platform-only paths or require central database calls for ordinary store operation.
+13. Repository alignment and implementation guardrails
+The public repository was inspected to align this specification with the current frontend and documented target architecture. The following observations are useful implementation constraints, not a substitute for a fresh engineering audit.
+REPOSITORY AREA
+OBSERVATION FROM REVIEW
+DESIGN / ENGINEERING CONSEQUENCE
+README.md
+Describes the dual-edition platform, tenant isolation, accounting, commerce, marketing, CMS, AI, and Master Control aspirations.
+Use as product capability intent; verify each capability’s current implementation and maturity before presenting it as live.
+AGENTS.md
+Requires discovery before code changes, no artificial implementations, auth partitioning and security isolation.
+UI work must be preceded by route/API/schema/permission inspection and must not fabricate data or bypass existing guard boundaries.
+CENTERPOINT-Master-Plan.md
+Contains an earlier proof-of-concept assessment and notes that the initial CMS was embedded in a single-page view toggle.
+Treat it as an architectural history artifact; reconcile its phase/status notes with the current branch and test results.
+frontend/src/App.tsx
+Uses a viewMode state and hash navigation for storefront, CMS and Master Control modes.
+Move toward route-level layouts and guards; preserve shared contexts without keeping the mode-switcher as the primary architecture.
+frontend/src/components/StudioCMS.tsx
+Provides a tab-based admin experience and includes catalog, orders, CMS/slider, analytics and settings concerns.
+Evolve into a real Studio shell with grouped modules, page-level navigation and a full-screen editor workspace.
+frontend/src/pages/MasterControlPanel/MasterControlCenter.tsx
+Currently mixes theme/motion, storefront section composition, currency, integrations, AI, marketing, code injection, branding and telemetry settings.
+Separate global platform controls from tenant storefront customization. Move tenant-owned theme and CMS controls into Store Studio.
+frontend/src/index.css
+Already contains Alabaster/Obsidian base colors and Cormorant Garamond, Plus Jakarta Sans and JetBrains Mono.
+Retain and formalize these foundations instead of replacing them with an unrelated visual identity.
+docs/screenshots/README.md
+Defines showcase capture targets for storefront, Studio, CMS, MCP and mobile.
+Update screenshot registry after the new IA is implemented; capture only from running application instances.
+STATUS RECONCILIATION REQUIRED
+Repository documents contain different maturity snapshots: README sections describe later completed phases, while AGENTS.md and the master plan include earlier discovery/proof-of-concept framing. Before implementation, establish the actual branch/commit, route inventory, API coverage, database schema and tests as the authoritative baseline. Do not copy README feature claims directly into live UI until verified.
+Current stack to preserve unless an audit proves otherwise
+LAYER
+REPOSITORY-DOCUMENTED TECHNOLOGY
+UI/UX IMPLICATION
+Backend
+Laravel 13 / PHP 8.3+ / REST API.
+Use existing service contracts and API resources; do not invent endpoint names.
+Frontend
+React 19, TypeScript, Vite, Tailwind CSS v4.
+Build reusable experience shells and typed module components.
+Routing / data
+React Router DOM v7, TanStack Query v5, Axios.
+Use route-level guards and predictable server-state/cache invalidation.
+Forms
+React Hook Form and Zod.
+Centralize form validation, inline errors and submit states.
+Motion / icons
+Framer Motion, GSAP, Lenis, Lucide React.
+Use existing libraries deliberately; avoid adding overlapping motion packages.
+Tenant/security architecture
+Documented separate platform, staff and customer auth boundaries; tenant resolution and database isolation.
+Keep UI context aligned with server-resolved identity and tenant context. Never trust client-supplied tenant IDs for authorization.
+Implementation guardrails
+Perform a route, API, schema and package audit before changing frontend architecture.
+Build visual tokens and shared primitives first, then the separate route layouts and role-aware navigation.
+Keep storefront, Studio and Master Control data boundaries explicit even if code is shared.
+Every metric, status and alert must come from a real query or verifiable runtime probe. Clearly label unavailable telemetry rather than inventing values.
+Use server-confirmed success for payment, stock, financial posting, publication, provisioning and tenant lifecycle actions.
+Keep tenant-authored code isolated from the Studio and platform origins.
+Ensure standalone edition can compile and run without SaaS control-plane dependencies.
+14. Delivery roadmap and acceptance criteria
+PHASE
+DELIVERABLES
+EXIT CRITERIA
+0 — Baseline audit
+Route map, API inventory, database/schema map, auth/permission map, current screen inventory, capability status register.
+No unknown route or permission boundary is assumed in design implementation.
+1 — Design foundations
+Tokens, typography, component library, navigation primitives, form/table states, responsive rules and accessibility checks.
+Components are reusable, tested and visually consistent across three experiences.
+2 — Experience shells
+Storefront shell, Store Studio shell, Master Control shell; route-level layouts and guards.
+Correct identity and tenant/platform boundaries; direct URLs and browser history work.
+3 — Storefront theme system
+Flagship editorial theme plus contrasting industry presets; home, listing, PDP, cart, checkout and account.
+Themes can be configured without forking the commerce engine; core customer journeys work.
+4 — Store Studio
+Overview, grouped navigation and prioritized commerce/catalog/order/inventory modules; role-aware controls.
+Merchant tasks are discoverable and consistent; actions reflect real backend capabilities.
+5 — Visual CMS
+Full-screen three-panel editor, component library, responsive preview, validation, draft, publish and version history.
+Editor is secure, usable at desktop/tablet/mobile and preserves the tenant context.
+6 — Master Control
+Tenant registry/detail, plans/subscriptions, domains, operator roles, infrastructure probes, audit and support workflows.
+Role-based access and audit requirements pass end-to-end security tests.
+7 — Hardening
+Responsive QA, accessibility, performance, telemetry validation, error states, security review and regression testing.
+No critical UX/security defects; flows are data-backed and tested.
+Cross-experience acceptance criteria
+Every navigation item leads to a real route or is visibly marked unavailable/not enabled under a controlled feature-entitlement rule.
+Every visible primary or secondary action performs its advertised action and provides loading, success or error feedback.
+Customer, staff and platform identities cannot cross their authorization boundaries by direct URL, API call or stale client state.
+All key pages have loading, empty, error, permission-denied and responsive states.
+No hardcoded operational numbers, fabricated service health or fake integration success indicators appear in production interfaces.
+All critical financial, stock, payment, publishing and tenant-lifecycle actions are confirmed by the server and audited.
+Keyboard-only users can complete core customer, merchant and operator workflows.
+Tenant theme settings cannot break the legibility or security of Studio and Master Control.
+Standalone mode supports Storefront and Store Studio without platform-control-plane dependency.
+Key UX test journeys
+ACTOR
+TEST JOURNEY
+SUCCESS SIGNAL
+Customer
+Find product → select valid variant → add to cart → checkout → receive confirmed order state.
+No lost cart/address data; price/stock confirmed; payment state truthful.
+Merchant / Catalog
+Create product → add variants/media → set price → attach inventory → preview and publish.
+Product is discoverable and only valid variants can be purchased.
+Merchant / Fulfillment
+Open paid order → pick/pack → book courier → track delivery → resolve exception.
+State transitions are valid, traceable and permission controlled.
+Merchant / CMS
+Edit hero and product section → preview mobile → save draft → request approval → publish.
+Correct page version is published; previous revision remains recoverable.
+Accountant
+Review journal → validate balanced entry → post or reverse with reason.
+Financial values are decimal-safe, balanced, immutable and audited.
+Platform Operations
+Provision tenant → verify domain → inspect health → suspend/restore with reason.
+Lifecycle is idempotent, scoped, auditable and does not leak tenant data.
+Platform Support
+Investigate tenant incident using scoped read access → request temporary support access if needed.
+Purpose, duration, scope and operator activity are visible and recorded.
+Design handoff package
+Figma file with pages organized by design system, storefront, Store Studio, CMS editor and Master Control.
+Component variants for default, hover, focus, pressed, disabled, loading, success, error and destructive states.
+Responsive specifications at desktop, tablet and mobile, including breakpoint behavior rather than only static screenshots.
+Navigation and route map with role-based visibility notes.
+Field-level form specifications: required/optional, data types, validation, helper text, error copy and submit behavior.
+Table specifications: columns, sorting, filtering, pagination, selection, bulk actions, responsive treatment and empty states.
+Chart specifications: metric definition, date range, data source, tooltip, empty state and accessible text summary.
+CMS component schema: editable properties, allowed child structure, responsive settings, validation and preview behavior.
+Permission matrix tied to real backend policies and route/API requirements.
+Prototype for critical user journeys and a design QA checklist for implementation.
+15. Screen inventory and final design approval
+Minimum screen inventory
+EXPERIENCE
+SCREENS TO DESIGN
+PRIORITY
+Storefront
+Home; collection; search; product detail; cart; checkout; order confirmation; order tracking; account login/register; account overview; mobile navigation; no-results and out-of-stock states.
+P0
+Storefront themes
+Luxury/editorial; electronics; fashion/lifestyle; beauty; home/furniture; grocery; B2B/wholesale pattern.
+P1
+Store Studio shell
+Overview; sidebar collapsed/expanded; command search; notifications; profile; permission denied; empty state.
+P0
+Studio operations
+Orders list/detail; product list/editor; variant editor; warehouse stock; movement ledger; customer detail; integration list/detail.
+P0
+Studio finance / insights
+Finance overview; journal detail; trial balance/P&L report patterns; analytics report/drill-through.
+P1
+Store Design / CMS
+Store Design overview; theme gallery; page list; full-screen editor; component library; inspector; responsive preview; validation; review; publish; history/rollback.
+P0
+Master Control
+Command Center; tenant list/detail; plan list/editor; subscription/invoice detail; domain verification; platform operators/roles; infrastructure health; audit search; support context.
+P0
+Responsive variants
+Desktop, tablet and mobile navigation/behavior for each major shell; mobile PDP/checkout; Studio table and editor adaptation.
+P0
+Final design approval checklist
+☐  The storefront can represent multiple industries without losing brand coherence.
+☐  The luxury editorial storefront is a polished flagship demonstration.
+☐  Merchants remain in one Store Studio for all daily work.
+☐  The CMS opens as a dedicated full-screen workspace inside Studio.
+☐  Master Control is clearly distinct from tenant operations.
+☐  Platform and tenant roles are defined with least-privilege defaults.
+☐  All route and permission assumptions have been reconciled with the backend.
+☐  All visual states and responsive behaviors are documented.
+☐  No feature is presented as live until its backend behavior is verified.
+☐  Standalone and SaaS deployment modes are both represented correctly.
+Closing direction
+One commerce engine.Three focused experiences.A coherent system built to scale.
+CENTERPOINT should feel polished to a shopper, dependable to a merchant and trustworthy to the people operating the platform. The design succeeds when the complexity of commerce becomes clear, controlled and approachable—without hiding the operational truth behind attractive dashboards.
+NEXT IMPLEMENTATION STEP
+Use this specification to produce the Figma architecture and screen-by-screen wireframes, beginning with the three application shells and the flagship storefront. In parallel, perform the repository baseline audit so every designed control maps to a real API, permission and state transition.
