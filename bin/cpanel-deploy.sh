@@ -48,7 +48,7 @@ FRONTEND_DIR="${PROJECT_ROOT}/frontend"
 # Auto-detect home directory and cPanel public_html
 CPANEL_USER="${USER:-$(whoami)}"
 HOME_DIR="${HOME:-/home/${CPANEL_USER}}"
-PUBLIC_HTML="${HOME_DIR}/public_html"
+PUBLIC_HTML="${CPANEL_PUBLIC_HTML:-${HOME_DIR}/public_html}"
 
 if [ ! -d "${PUBLIC_HTML}" ]; then
     # Fallback to local public_html within project if standalone
@@ -217,7 +217,40 @@ echo -e "  • Subdomains:    ${GREEN}6 Target Webroots Synchronized${NC}"
 # Setup API Webroot (points directly to Laravel's backend/public)
 API_ROOT="${PUBLIC_HTML}/api"
 mkdir -p "${API_ROOT}"
-rsync -a "${BACKEND_DIR}/public/" "${API_ROOT}/" 2>/dev/null || cp -R "${BACKEND_DIR}/public/"* "${API_ROOT}/"
+
+# Copy .htaccess and public assets from backend/public
+rsync -a --exclude="index.php" "${BACKEND_DIR}/public/" "${API_ROOT}/" 2>/dev/null || cp -R "${BACKEND_DIR}/public/"* "${API_ROOT}/"
+
+# Write resilient bridge index.php for API entrypoint pointing directly to backend
+cat << EOF > "${API_ROOT}/index.php"
+<?php
+
+use Illuminate\Foundation\Application;
+use Illuminate\Http\Request;
+
+define('LARAVEL_START', microtime(true));
+
+\$backendDir = '${BACKEND_DIR}';
+
+// Determine if the application is in maintenance mode...
+if (file_exists(\$maintenance = \$backendDir . '/storage/framework/maintenance.php')) {
+    require \$maintenance;
+}
+
+// Register Composer autoloader...
+require \$backendDir . '/vendor/autoload.php';
+
+// Bootstrap Laravel and handle request...
+/** @var Application \$app */
+\$app = require_once \$backendDir . '/bootstrap/app.php';
+
+\$app->handleRequest(Request::capture());
+EOF
+
+# Ensure storage symlink exists inside API webroot
+if [ ! -L "${API_ROOT}/storage" ] && [ ! -d "${API_ROOT}/storage" ]; then
+    ln -s "${BACKEND_DIR}/storage/app/public" "${API_ROOT}/storage" 2>/dev/null || true
+fi
 
 # Configure public_html root fallback
 if [ ! -f "${PUBLIC_HTML}/index.html" ]; then
